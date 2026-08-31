@@ -2,9 +2,8 @@ from core.state import ResearchState
 from agents.base_agent import BaseAgent
 from core.config import settings
 
-# Attempt to import langchain, fallback to mock if API key missing
 try:
-    from langchain.chat_models import ChatOpenAI
+    from langchain_mistralai.chat_models import ChatMistralAI
     from langchain.schema import HumanMessage, SystemMessage
     LANGCHAIN_AVAILABLE = True
 except ImportError:
@@ -14,26 +13,25 @@ class ResearchPlanningAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="Research Planning Agent",
-            description="Interactively helps the researcher define topic, gap, and objectives using an LLM."
+            description="Interactively helps the researcher define topic, gap, and objectives using Mistral AI."
         )
 
     def process(self, state: ResearchState, user_input: str = None) -> ResearchState:
-        """
-        Invokes an LLM to chat with the user, extract the topic, problem statement, and objectives, 
-        and updates the state.
-        """
         if not user_input:
             return state
 
-        # If we have an API key and LangChain installed, do a real LLM call
-        if LANGCHAIN_AVAILABLE and settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != "your_openai_api_key_here":
+        if LANGCHAIN_AVAILABLE and settings.MISTRAL_API_KEY:
             return self._process_with_llm(state, user_input)
         else:
-            # Fallback to the mock behavior for testing without keys
             return self._process_mock(state, user_input)
 
     def _process_with_llm(self, state: ResearchState, user_input: str) -> ResearchState:
-        chat = ChatOpenAI(temperature=0.7, model_name=settings.DEFAULT_LLM, openai_api_key=settings.OPENAI_API_KEY)
+        # Initialize the Mistral AI client
+        chat = ChatMistralAI(
+            mistral_api_key=settings.MISTRAL_API_KEY,
+            model=settings.DEFAULT_LLM,
+            temperature=0.7
+        )
         
         system_prompt = f"""
         You are the Research Planning Agent for an academic manuscript.
@@ -52,11 +50,9 @@ class ResearchPlanningAgent(BaseAgent):
                 HumanMessage(content=user_input)
             ])
             
-            # Very basic JSON parsing for the sake of the prototype
             import json
             import re
             
-            # Extract JSON from response
             match = re.search(r'\{.*\}', response.content, re.DOTALL)
             if match:
                 data = json.loads(match.group(0))
@@ -67,13 +63,11 @@ class ResearchPlanningAgent(BaseAgent):
                     
         except Exception as e:
             print(f"LLM Error: {e}")
-            # Graceful fallback
             self._process_mock(state, user_input)
             
         return state
 
     def _process_mock(self, state: ResearchState, user_input: str) -> ResearchState:
-        """Mock extraction for when API keys aren't set"""
         if not state.topic:
             state.topic = user_input
         elif not state.problem_statement:
