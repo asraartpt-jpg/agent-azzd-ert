@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Research Paper Writer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container { height: calc(100vh - 180px); }
+        .manuscript-container { height: calc(100vh - 80px); }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen overflow-hidden">
+
+    <!-- Top Navigation -->
+    <nav class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
+        <h1 class="text-xl font-bold"><i class="fas fa-microscope mr-2"></i> Agentic AI Research Ecosystem</h1>
+        <div class="text-sm bg-blue-800 px-3 py-1 rounded">Session: <span id="session-id-display">New Session</span></div>
+    </nav>
+
+    <div class="flex h-full">
+        <!-- Left Panel: Chat Interface -->
+        <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-4 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
+                <button class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700" onclick="document.getElementById('auto-modal').classList.remove('hidden')">
+                    <i class="fas fa-magic mr-1"></i> Auto-Generate
+                </button>
+                <select id="agent-selector" class="text-sm border border-gray-300 rounded p-1">
+                    <option value="planning">1. Planning Agent</option>
+                    <option value="discovery">2. Discovery Agent</option>
+                    <option value="verification">3. Verification Agent</option>
+                    <option value="synthesis">4. Literature Review Agent</option>
+                    <option value="methodology">5. Methodology Agent</option>
+                    <option value="data">6. Data Interpretation Agent</option>
+                    <option value="writing">7. Academic Writing Agent</option>
+                    <option value="formatting">8. Publisher Formatting Agent</option>
+                    <option value="citation">9. Citation Integration Agent</option>
+                    <option value="quality">10. Quality Review Agent</option>
+                </select>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div id="chat-box" class="chat-container overflow-y-auto p-4 space-y-4">
+                <div class="flex flex-col space-y-1">
+                    <span class="text-xs text-gray-500 font-bold ml-2">System Orchestrator</span>
+                    <div class="bg-blue-50 text-blue-900 p-3 rounded-lg rounded-tl-none text-sm inline-block max-w-[90%] shadow-sm border border-blue-100">
+                        Welcome! Click "Auto-Generate" for a one-shot pipeline, or chat with individual agents below.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="p-4 border-t border-gray-200 bg-white">
+                <form id="chat-form" class="flex space-x-2">
+                    <input type="text" id="chat-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" placeholder="Message the agent...">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Panel: Manuscript State -->
+        <div class="w-2/3 bg-gray-50 flex flex-col">
+            <div class="p-4 bg-white border-b border-gray-200 flex space-x-4">
+                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('draft')">Manuscript Draft</button>
+                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('sources')">Source Database</button>
+                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('json')">Raw State (Debug)</button>
+            </div>
+            
+            <div class="manuscript-container overflow-y-auto p-8" id="right-panel-content">
+                <div id="tab-draft" class="bg-white p-8 shadow-sm border border-gray-200 min-h-full">
+                    <h1 class="text-3xl font-bold text-center mb-8" id="doc-title">[Untitled Research Paper]</h1>
+                    <div id="doc-content" class="prose max-w-none text-gray-800 leading-relaxed">
+                        <p class="text-gray-400 italic text-center mt-10">The manuscript draft is currently empty.</p>
+                    </div>
+                </div>
+                
+                <div id="tab-sources" class="hidden">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800">Verified Source Database</h2>
+                    <div id="source-list" class="space-y-4">
+                        <p class="text-gray-500 italic">No sources discovered yet.</p>
+                    </div>
+                </div>
+                
+                <div id="tab-json" class="hidden">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800">State Object</h2>
+                    <pre id="state-json" class="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-Generate Modal -->
+    <div id="auto-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-[500px] max-w-full">
+            <h2 class="text-xl font-bold mb-4">Automated Paper Generation</h2>
+            <form id="auto-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Research Title *</label>
+                    <input type="text" id="auto-title" required class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Journal Name (Optional)</label>
+                    <input type="text" id="auto-journal" class="w-full border p-2 rounded" placeholder="e.g. IEEE Transactions...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Research Questions (Optional, comma separated)</label>
+                    <input type="text" id="auto-rqs" class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Research Objectives (Optional, comma separated)</label>
+                    <input type="text" id="auto-objs" class="w-full border p-2 rounded">
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="document.getElementById('auto-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
