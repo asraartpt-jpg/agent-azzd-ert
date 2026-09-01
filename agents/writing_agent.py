@@ -1,14 +1,8 @@
+import requests
 from typing import Dict, Any
 from core.state import ResearchState
 from agents.base_agent import BaseAgent
 from core.config import settings
-
-try:
-    from langchain_mistralai.chat_models import ChatMistralAI
-    from langchain_core.messages import HumanMessage, SystemMessage
-    LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
 
 class AcademicWritingAgent(BaseAgent):
     def __init__(self):
@@ -25,7 +19,7 @@ class AcademicWritingAgent(BaseAgent):
         
         for section, content in state.manuscript_draft.items():
             if section != "Formatting Checklist":
-                if LANGCHAIN_AVAILABLE and settings.MISTRAL_API_KEY:
+                if settings.MISTRAL_API_KEY:
                     refined_content = self._refine_tone_with_mistral(content, style_instruction, section)
                 else:
                     refined_content = self._refine_tone_mock(content)
@@ -34,30 +28,35 @@ class AcademicWritingAgent(BaseAgent):
         return state
 
     def _refine_tone_with_mistral(self, text: str, style: str, section: str) -> str:
-        chat = ChatMistralAI(
-            mistral_api_key=settings.MISTRAL_API_KEY,
-            model=settings.DEFAULT_LLM,
-            temperature=0.3 # Low temperature for academic writing
-        )
-        
         system_prompt = f"""
         You are an elite academic editor specializing in publications for {style}.
         Your task is to take a draft for the section '{section}' and rewrite it to perfectly match the tone, 
         rigor, and stylistic conventions required by high-impact Science Direct business and social science journals.
         
         RULES:
-        - Maintain zero AI plagiarism footprint (do not use cliché AI phrases like "In today's rapidly evolving world", "Delve into", "Tapestry", etc.).
+        - Maintain zero AI plagiarism footprint (do not use clichAc AI phrases like "In today's rapidly evolving world", "Delve into", "Tapestry", etc.).
         - The language must be objective, precise, formal, and analytical.
         - Do not change the underlying facts or data.
         - Output ONLY the rewritten text for the section. Do not include meta-commentary.
         """
         
+        headers = {
+            "Authorization": f"Bearer {settings.MISTRAL_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": settings.DEFAULT_LLM,
+            "temperature": 0.3,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Rewrite the following draft text:\n\n{text}"}
+            ]
+        }
+        
         try:
-            response = chat([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=f"Rewrite the following draft text:\n\n{text}")
-            ])
-            return response.content
+            response = requests.post("https://api.mistral.ai/v1/chat/completions", headers=headers, json=payload)
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
         except Exception as e:
             print(f"Mistral Writing Error: {e}")
             return self._refine_tone_mock(text)

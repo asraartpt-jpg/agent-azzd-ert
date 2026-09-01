@@ -1,13 +1,9 @@
+import json
+import re
+import requests
 from core.state import ResearchState
 from agents.base_agent import BaseAgent
 from core.config import settings
-
-try:
-    from langchain_mistralai.chat_models import ChatMistralAI
-    from langchain_core.messages import HumanMessage, SystemMessage
-    LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
 
 class ResearchPlanningAgent(BaseAgent):
     def __init__(self):
@@ -20,19 +16,12 @@ class ResearchPlanningAgent(BaseAgent):
         if not user_input:
             return state
 
-        if LANGCHAIN_AVAILABLE and settings.MISTRAL_API_KEY:
+        if settings.MISTRAL_API_KEY:
             return self._process_with_llm(state, user_input)
         else:
             return self._process_mock(state, user_input)
 
     def _process_with_llm(self, state: ResearchState, user_input: str) -> ResearchState:
-        # Initialize the Mistral AI client
-        chat = ChatMistralAI(
-            mistral_api_key=settings.MISTRAL_API_KEY,
-            model=settings.DEFAULT_LLM,
-            temperature=0.7
-        )
-        
         system_prompt = f"""
         You are the Research Planning Agent for an academic manuscript.
         The current state of the research is:
@@ -44,16 +33,25 @@ class ResearchPlanningAgent(BaseAgent):
         Format: {{"topic": "new topic", "problem_statement": "new problem"}}
         """
         
+        headers = {
+            "Authorization": f"Bearer {settings.MISTRAL_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": settings.DEFAULT_LLM,
+            "temperature": 0.7,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input}
+            ]
+        }
+        
         try:
-            response = chat([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_input)
-            ])
+            response = requests.post("https://api.mistral.ai/v1/chat/completions", headers=headers, json=payload)
+            response.raise_for_status()
+            content = response.json()["choices"][0]["message"]["content"]
             
-            import json
-            import re
-            
-            match = re.search(r'\{.*\}', response.content, re.DOTALL)
+            match = re.search(r'\{.*\}', content, re.DOTALL)
             if match:
                 data = json.loads(match.group(0))
                 if "topic" in data and data["topic"]:
