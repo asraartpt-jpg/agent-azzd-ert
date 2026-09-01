@@ -67,10 +67,18 @@
                 <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('draft')">Manuscript Draft</button>
                 <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('sources')">Source Database</button>
                 <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('style')">Journal Style Profile</button>
+                <button class="px-4 py-2 bg-purple-100 rounded font-semibold text-purple-800 hover:bg-purple-200 transition" onclick="switchTab('quality')">Quality Dashboard</button>
                 <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('json')">Raw State (Debug)</button>
             </div>
             
             <div class="manuscript-container overflow-y-auto p-8" id="right-panel-content">
+                <div id="tab-quality" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Pipeline Quality Dashboard</h2>
+                    <div id="quality-content" class="space-y-6">
+                        <p class="text-gray-500 italic">No quality metrics available yet. Generate a paper to view scores.</p>
+                    </div>
+                </div>
+                
                 <div id="tab-draft" class="bg-white p-8 shadow-sm border border-gray-200 min-h-full">
                     <div class="flex justify-between items-center mb-8 border-b pb-4">
                         <h1 class="text-3xl font-bold" id="doc-title">[Untitled Research Paper]</h1>
@@ -156,6 +164,34 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Research Objectives (Optional, comma separated)</label>
                     <input type="text" id="auto-objs" class="w-full border p-2 rounded">
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Preferred Methodology</label>
+                        <select id="auto-methodology" class="w-full p-2 border border-blue-200 rounded">
+                            <option value="Auto Recommend">Auto Recommend</option>
+                            <option value="Quantitative">Quantitative</option>
+                            <option value="Qualitative">Qualitative</option>
+                            <option value="Mixed Methods">Mixed Methods</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Publication Year Preference</label>
+                        <select id="auto-year" class="w-full p-2 border border-blue-200 rounded">
+                            <option value="Last 3 years">Last 3 years</option>
+                            <option value="Last 5 years" selected>Last 5 years</option>
+                            <option value="Last 10 years">Last 10 years</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Journal Quality Filter (Scopus/WoS)</label>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center"><input type="checkbox" id="q1" value="Q1" checked class="form-checkbox h-5 w-5 text-blue-600"><span class="ml-2">Q1</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" id="q2" value="Q2" checked class="form-checkbox h-5 w-5 text-blue-600"><span class="ml-2">Q2</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" id="q3" value="Q3" checked class="form-checkbox h-5 w-5 text-blue-600"><span class="ml-2">Q3</span></label>
+                    </div>
+                    <p class="text-xs text-red-500 mt-1">Q4 and unverified journals are automatically excluded.</p>
                 </div>
                 <div class="flex justify-end space-x-2 mt-6">
                     <button type="button" onclick="document.getElementById('auto-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
