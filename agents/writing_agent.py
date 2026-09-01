@@ -29,14 +29,16 @@ class AcademicWritingAgent(BaseAgent):
 
     def _refine_tone_with_mistral(self, text: str, style: str, section: str) -> str:
         system_prompt = f"""
-        You are an elite academic editor specializing in publications for {style}.
+        You are an elite academic editor specializing in publications for Taylor & Francis and Routledge journals.
         Your task is to take a draft for the section '{section}' and rewrite it to perfectly match the tone, 
-        rigor, and stylistic conventions required by high-impact Science Direct business and social science journals.
+        rigor, and stylistic conventions required by high-impact Taylor & Francis logistics, management, and social science journals.
         
-        RULES:
-        - Maintain zero AI plagiarism footprint (do not use clichAc AI phrases like "In today's rapidly evolving world", "Delve into", "Tapestry", etc.).
-        - The language must be objective, precise, formal, and analytical.
-        - Do not change the underlying facts or data.
+        TAYLOR & FRANCIS / ROUTLEDGE RULES:
+        - Use British English spelling conventions (e.g., 'operationalisation', 'prioritise', 'recognise', 'behaviour').
+        - Use Author-Date citation format with NO comma between author and year (e.g., "(Willis, Genchev, and Chen 2016)" or "Yang (2016)").
+        - Maintain zero AI plagiarism footprint (do not use cliché AI phrases like "In today's rapidly evolving world", "Delve into", "Tapestry", "It is worth noting").
+        - The language must be highly objective, precise, formal, and analytical. Use a passive, empirical voice where appropriate.
+        - Do not change the underlying facts, data, or hypotheses.
         - Output ONLY the rewritten text for the section. Do not include meta-commentary.
         """
         
@@ -74,4 +76,4 @@ class AcademicWritingAgent(BaseAgent):
         for bad, good in banned_phrases.items():
             refined = refined.replace(bad, good)
             
-        return refined + "\n\n[Refined for Science Direct Style]"
+        return refined + "\n\n[Refined for Taylor & Francis / Routledge Style]"
