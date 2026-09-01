@@ -24,6 +24,13 @@ from agents.formatting_agent import PublisherFormattingAgent
 from agents.quality_agent import QualityReviewAgent
 from agents.style_agent import JournalStyleAgent
 from agents.restructure_agent import RestructuringAgent
+from agents.intelligence_agent import IntelligenceAgent
+from agents.search_strategy_agent import SearchStrategyAgent
+from agents.quality_verification_agent import QualityVerificationAgent
+from agents.evidence_extraction_agent import EvidenceExtractionAgent
+from agents.gap_synthesis_agent import GapSynthesisAgent
+from agents.theory_agent import TheoryAgent
+from agents.originality_agent import OriginalityAgent
 
 router = APIRouter()
 
@@ -41,6 +48,14 @@ orchestrator.register_agent("citation", CitationIntegrationAgent())
 orchestrator.register_agent("formatting", PublisherFormattingAgent())
 orchestrator.register_agent("quality", QualityReviewAgent())
 
+# New pipeline agents
+orchestrator.register_agent("intelligence", IntelligenceAgent())
+orchestrator.register_agent("search_strategy", SearchStrategyAgent())
+orchestrator.register_agent("quality_verification", QualityVerificationAgent())
+orchestrator.register_agent("evidence_extraction", EvidenceExtractionAgent())
+orchestrator.register_agent("gap_synthesis", GapSynthesisAgent())
+orchestrator.register_agent("theory", TheoryAgent())
+orchestrator.register_agent("originality", OriginalityAgent())
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     phase: str
@@ -107,17 +122,40 @@ async def generate_full_paper(request: GeneratePaperRequest):
         target_journal=request.target_journal,
         article_type=request.article_type,
         research_questions=request.research_questions or [],
-        objectives=request.objectives or []
+        objectives=request.objectives or [],
+        preferred_methodology=request.preferred_methodology or "Auto Recommend",
+        publication_year_preference=request.publication_year_preference or "Last 5 years",
+        journal_quality_filter=request.journal_quality_filter or ["Q1", "Q2", "Q3"]
     )
     
     try:
-        # Phase 1-4: Generate Style Blueprint
+        # STEP 1-4: Input Validation & Research Intelligence
+        state = orchestrator.route_request(state, "intelligence")
+        
+        # STEP 5: Search Strategy
+        state = orchestrator.route_request(state, "search_strategy")
+        
+        # STEP 6-7: Scholarly Search
+        state = orchestrator.route_request(state, "discovery", user_input=state.topic)
+        
+        # STEP 8-11: Verification & Q1/Q2/Q3 Filtering
+        state = orchestrator.route_request(state, "quality_verification")
+        
+        # STEP 16-17: Evidence Extraction Matrix
+        state = orchestrator.route_request(state, "evidence_extraction")
+        
+        # STEP 18: Research Gap Synthesis
+        state = orchestrator.route_request(state, "gap_synthesis")
+        
+        # STEP 19: Theoretical Background
+        state = orchestrator.route_request(state, "theory")
+        
+        # STEP 20: Methodology Plan
+        state = orchestrator.route_request(state, "methodology")
+        
+        # STEP 21-22: Style Retrieval & Blueprint
         style_input = f"{request.target_publisher}|{request.target_journal}|{request.article_type}"
         state = orchestrator.route_request(state, "style", user_input=style_input)
-        
-        # Discovery and Verification
-        state = orchestrator.route_request(state, "discovery", user_input=state.topic)
-        state = orchestrator.route_request(state, "verification")
         
         # Scaffold Manuscript Draft based on Blueprint
         if state.manuscript_blueprint and "sections" in state.manuscript_blueprint:
@@ -140,9 +178,9 @@ async def generate_full_paper(request: GeneratePaperRequest):
                     content += f"Existing literature provides various insights into {state.topic}, yet consensus remains elusive. "
                     content += "[Detailed synthesis of verified literature to be inserted here based on empirical evidence.]"
                 elif "method" in title_lower:
-                    content += "This research employs a quantitative cross-sectional design. Data was collected via structured questionnaires distributed to a targeted sample."
+                    content += f"This research employs a {state.preferred_methodology} design as proposed by the Methodology Agent. Data was collected via appropriate protocols."
                 elif "result" in title_lower or "analysis" in title_lower:
-                    content += "Data analysis conducted using structural equation modeling indicates strong support for the primary hypotheses. The measurement model demonstrated adequate reliability and validity."
+                    content += "[Data Analysis Plan: No empirical data uploaded. Analysis simulated for structural template only.]"
                 elif "discussion" in title_lower or "implication" in title_lower:
                     content += "The findings significantly extend prior models by demonstrating the contextual boundaries of technology adoption. Practically, managers can leverage these insights to formulate better strategies."
                 elif "conclusion" in title_lower:
@@ -156,17 +194,19 @@ async def generate_full_paper(request: GeneratePaperRequest):
                     
                 state.manuscript_draft[title] = content
         else:
-            # Fallback if blueprint generation failed
             state.manuscript_draft["1. Introduction"] = f"### 1. Introduction\n\nThis study explores {state.topic}."
         
-        state = orchestrator.route_request(state, "synthesis")
-        state = orchestrator.route_request(state, "methodology", user_input="Generate automated methodology matching the objectives.")
-        state = orchestrator.route_request(state, "data", user_input="Simulate standard structural equation modeling results based on hypotheses.")
+        # STEP 37: Citation Integrity
+        state = orchestrator.route_request(state, "citation")
+        
+        # STEP 38: Originality & Writing Quality
+        state = orchestrator.route_request(state, "originality")
         
         # Enforce selected publisher style formatting using Writing Agent
         style_name = state.style_profile.publisher if state.style_profile else request.target_publisher
         state = orchestrator.route_request(state, "writing", user_input=style_name)
-        state = orchestrator.route_request(state, "citation")
+        
+        # STEP 39: Journal Compliance Check (Dashboard)
         state = orchestrator.route_request(state, "quality")
         
         # Save final state to Supabase

@@ -57,6 +57,12 @@ class ResearchState(BaseModel):
     target_journal: Optional[str] = None  
     article_type: Optional[str] = "Original Research Article"
     topic: Optional[str] = None
+    
+    # New Phase 1 inputs
+    preferred_methodology: str = "Auto Recommend"
+    publication_year_preference: str = "Last 5 years"
+    journal_quality_filter: List[str] = Field(default_factory=lambda: ["Q1", "Q2", "Q3"])
+    
     problem_statement: Optional[str] = None
     research_questions: List[str] = Field(default_factory=list)
     objectives: List[str] = Field(default_factory=list)
@@ -64,7 +70,16 @@ class ResearchState(BaseModel):
     sources: List[ResearchSource] = Field(default_factory=list)
     methodology: Dict[str, Any] = Field(default_factory=dict)
     
-    # New Publisher Style Engine fields
+    # New Pipeline outputs
+    research_intelligence: Dict[str, Any] = Field(default_factory=dict)
+    search_strategy: Dict[str, Any] = Field(default_factory=dict)
+    evidence_matrix: List[Dict[str, Any]] = Field(default_factory=list)
+    research_gaps: List[Dict[str, Any]] = Field(default_factory=list)
+    theoretical_background: Dict[str, Any] = Field(default_factory=dict)
+    originality_report: Dict[str, Any] = Field(default_factory=dict)
+    quality_dashboard: Dict[str, Any] = Field(default_factory=dict)
+    
+    # Publisher Style Engine fields
     style_profile: Optional[StyleProfile] = None
     manuscript_blueprint: Dict[str, Any] = Field(default_factory=dict)
     compliance_report: Dict[str, Any] = Field(default_factory=dict)
