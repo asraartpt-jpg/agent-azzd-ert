@@ -42,6 +42,38 @@ function updateUI(state) {
         docContent.innerHTML = htmlContent;
     }
     
+    // Update Style Profile Tab
+    const styleContent = document.getElementById('style-profile-content');
+    if (state.style_profile) {
+        const prof = state.style_profile;
+        styleContent.innerHTML = `
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div><strong>Target Publisher:</strong> ${prof.publisher}</div>
+                <div><strong>Target Journal:</strong> ${prof.journal}</div>
+                <div><strong>Article Type:</strong> ${prof.article_type}</div>
+                <div><strong>Abstract Style:</strong> ${prof.abstract_style}</div>
+                <div><strong>Citation Style:</strong> ${prof.citation_style}</div>
+                <div><strong>Reference Style:</strong> ${prof.reference_style}</div>
+                <div><strong>Keywords Label:</strong> ${prof.keyword_label} (${prof.keyword_count})</div>
+                <div><strong>Source:</strong> ${prof.source}</div>
+            </div>
+            
+            <div class="mt-4">
+                <h4 class="font-bold border-b pb-1 mb-2">Section Structure</h4>
+                <ul class="list-disc ml-5 text-sm">
+                    ${prof.main_sections.map(s => `<li>${s}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div class="mt-4">
+                <h4 class="font-bold border-b pb-1 mb-2">Mandatory Declarations</h4>
+                <ul class="list-disc ml-5 text-sm">
+                    ${prof.declaration_requirements.length > 0 ? prof.declaration_requirements.map(d => `<li>${d}</li>`).join('') : "<li>None specified</li>"}
+                </ul>
+            </div>
+        `;
+    }
+    
     const sourceList = document.getElementById('source-list');
     if (state.sources && state.sources.length > 0) {
         let htmlSources = "";
@@ -83,6 +115,46 @@ function appendMessage(sender, text, isUser) {
     chatBox.insertAdjacentHTML('beforeend', msgHtml);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+// Handle Style Switch
+document.getElementById('switch-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    document.getElementById('switch-modal').classList.add('hidden');
+    
+    if (!currentSessionId) {
+        alert("Please generate a manuscript first.");
+        return;
+    }
+    
+    const publisher = document.getElementById('switch-publisher').value;
+    const journal = document.getElementById('switch-journal').value;
+    const type = document.getElementById('switch-type').value;
+    
+    appendMessage('You', `[Switch Style Request]\nPublisher: ${publisher}`, true);
+    appendMessage('System Orchestrator', `Restructuring manuscript to fit ${publisher} guidelines...`, false);
+    
+    try {
+        const response = await fetch('/api/v1/switch_style', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: currentSessionId,
+                target_publisher: publisher,
+                target_journal: journal,
+                article_type: type
+            })
+        });
+        
+        if (!response.ok) throw new Error('API Error');
+        const data = await response.json();
+        
+        appendMessage('System Orchestrator', 'Style switch complete! The manuscript has been restructured and a new Compliance Report generated.', false);
+        updateUI(data.state);
+        
+    } catch (error) {
+        appendMessage('System', 'Error switching style. Ensure backend is running.', false);
+    }
+});
 
 // Handle Auto-Generate Submit
 document.getElementById('auto-form').addEventListener('submit', async (e) => {

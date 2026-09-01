@@ -66,14 +66,27 @@
             <div class="p-4 bg-white border-b border-gray-200 flex space-x-4">
                 <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('draft')">Manuscript Draft</button>
                 <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('sources')">Source Database</button>
+                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('style')">Journal Style Profile</button>
                 <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('json')">Raw State (Debug)</button>
             </div>
             
             <div class="manuscript-container overflow-y-auto p-8" id="right-panel-content">
                 <div id="tab-draft" class="bg-white p-8 shadow-sm border border-gray-200 min-h-full">
-                    <h1 class="text-3xl font-bold text-center mb-8" id="doc-title">[Untitled Research Paper]</h1>
+                    <div class="flex justify-between items-center mb-8 border-b pb-4">
+                        <h1 class="text-3xl font-bold" id="doc-title">[Untitled Research Paper]</h1>
+                        <button onclick="document.getElementById('switch-modal').classList.remove('hidden')" class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 transition">
+                            <i class="fas fa-exchange-alt mr-2"></i> Change Journal Style
+                        </button>
+                    </div>
                     <div id="doc-content" class="prose max-w-none text-gray-800 leading-relaxed">
                         <p class="text-gray-400 italic text-center mt-10">The manuscript draft is currently empty.</p>
+                    </div>
+                </div>
+                
+                <div id="tab-style" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Active Style Profile</h2>
+                    <div id="style-profile-content" class="space-y-6">
+                        <p class="text-gray-500 italic">No style profile active. Please generate a manuscript.</p>
                     </div>
                 </div>
                 
@@ -139,6 +152,42 @@
                 <div class="flex justify-end space-x-2 mt-6">
                     <button type="button" onclick="document.getElementById('auto-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Style Switcher Modal -->
+    <div id="switch-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-[500px] max-w-full">
+            <h2 class="text-xl font-bold mb-4">Change Journal Style</h2>
+            <p class="text-sm text-gray-600 mb-4">Restructure this manuscript to fit a new publisher's guidelines.</p>
+            <form id="switch-form" class="space-y-4">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">New Target Publisher</label>
+                    <select id="switch-publisher" class="w-full p-2 border border-blue-200 rounded">
+                        <option value="Emerald">Emerald</option>
+                        <option value="Elsevier / ScienceDirect">Elsevier / ScienceDirect</option>
+                        <option value="IEEE">IEEE</option>
+                        <option value="Taylor & Francis">Taylor & Francis</option>
+                        <option value="Springer Nature">Springer Nature</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">New Target Journal (Optional)</label>
+                    <input type="text" id="switch-journal" class="w-full p-2 border border-blue-200 rounded" placeholder="Search and Select Journal">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Article Type</label>
+                    <select id="switch-type" class="w-full p-2 border border-blue-200 rounded">
+                        <option value="Original Research Article">Original Research Article</option>
+                        <option value="Review Article">Review Article</option>
+                        <option value="Systematic Literature Review">Systematic Literature Review</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="document.getElementById('switch-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded"><i class="fas fa-magic mr-1"></i> Restructure Manuscript</button>
                 </div>
             </form>
         </div>

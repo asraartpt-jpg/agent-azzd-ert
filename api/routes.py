@@ -17,12 +17,14 @@ from agents.citation_agent import CitationIntegrationAgent
 from agents.formatting_agent import PublisherFormattingAgent
 from agents.quality_agent import QualityReviewAgent
 from agents.style_agent import JournalStyleAgent
+from agents.restructure_agent import RestructuringAgent
 
 router = APIRouter()
 
 orchestrator = Orchestrator()
 orchestrator.register_agent("planning", ResearchPlanningAgent())
 orchestrator.register_agent("style", JournalStyleAgent())
+orchestrator.register_agent("restructure", RestructuringAgent())
 orchestrator.register_agent("discovery", LiteratureDiscoveryAgent())
 orchestrator.register_agent("verification", CitationVerificationAgent())
 orchestrator.register_agent("synthesis", LiteratureReviewAgent())
@@ -139,3 +141,38 @@ async def chat_with_agent(request: ChatRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+class SwitchStyleRequest(BaseModel):
+    session_id: str
+    target_publisher: str
+    target_journal: Optional[str] = None
+    article_type: str
+
+@router.post("/switch_style")
+async def switch_style(request: SwitchStyleRequest):
+    state = _get_or_create_state(request.session_id)
+    state.target_publisher = request.target_publisher
+    state.target_journal = request.target_journal
+    state.article_type = request.article_type
+    
+    try:
+        # Phase 1-4: Generate New Style Blueprint
+        style_input = f"{request.target_publisher}|{request.target_journal}|{request.article_type}"
+        state = orchestrator.route_request(state, "style", user_input=style_input)
+        
+        # Phase 6-7: Restructure Manuscript
+        state = orchestrator.route_request(state, "restructure", user_input=request.target_publisher)
+        
+        # Phase 8: Re-run Compliance Report
+        state = orchestrator.route_request(state, "quality")
+        
+        save_research_session(state.session_id, state.model_dump())
+        
+        return {
+            "session_id": state.session_id,
+            "state": state.model_dump(),
+            "message": f"Successfully switched manuscript style to {request.target_publisher}."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
