@@ -1,6 +1,8 @@
+import sys
+import traceback
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import router
+from fastapi.responses import JSONResponse
 
 app = FastAPI(
     title="Agentic AI Research Paper System",
@@ -8,19 +10,27 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS so the local frontend can talk to the API
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for local development
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/api/v1")
+error_msg = "No error"
 
-@app.get("/")
+try:
+    from api.routes import router
+    app.include_router(router, prefix="/api/v1")
+except Exception as e:
+    error_msg = traceback.format_exc()
+
+@app.get("/api/v1/")
 async def root():
+    if error_msg != "No error":
+        return JSONResponse(status_code=500, content={"error": error_msg})
     return {"message": "Welcome to the Agentic AI Research Paper System API"}
 
 if __name__ == "__main__":
