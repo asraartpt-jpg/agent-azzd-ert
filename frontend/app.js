@@ -109,7 +109,7 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     appendMessage('System Orchestrator', 'Initiating 10-agent automated pipeline. This may take a moment...', false);
     
     try {
-        const response = await fetch('http://localhost:8000/api/v1/generate_paper', {
+        const response = await fetch('/api/v1/generate_paper', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -145,7 +145,7 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
     inputField.value = '';
     
     try {
-        const response = await fetch('http://localhost:8000/api/v1/chat', {
+        const response = await fetch('/api/v1/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
