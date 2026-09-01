@@ -32,19 +32,8 @@ function updateUI(state) {
     const docContent = document.getElementById('doc-content');
     if (Object.keys(state.manuscript_draft).length > 0) {
         let htmlContent = "";
-        const order = [
-            "Introduction", 
-            "Literature Review", 
-            "Theoretical Background", 
-            "Methodology", 
-            "Results", 
-            "Conclusion & Future Research", 
-            "References", 
-            "Formatting Checklist", 
-            "Quality Report"
-        ];
         
-        order.forEach(section => {
+        Object.keys(state.manuscript_draft).forEach(section => {
             if (state.manuscript_draft[section]) {
                 htmlContent += formatMarkdown(state.manuscript_draft[section]);
             }
@@ -101,12 +90,14 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     document.getElementById('auto-modal').classList.add('hidden');
     
     const title = document.getElementById('auto-title').value;
+    const publisher = document.getElementById('auto-publisher').value;
     const journal = document.getElementById('auto-journal').value;
+    const type = document.getElementById('auto-type').value;
     const rqs = document.getElementById('auto-rqs').value.split(',').filter(x => x.trim() !== '');
     const objs = document.getElementById('auto-objs').value.split(',').filter(x => x.trim() !== '');
     
-    appendMessage('You', `[Auto-Generate Request]\nTitle: ${title}\nJournal: ${journal}`, true);
-    appendMessage('System Orchestrator', 'Initiating 10-agent automated pipeline. This may take a moment...', false);
+    appendMessage('You', `[Auto-Generate Request]\nTitle: ${title}\nPublisher: ${publisher}\nType: ${type}`, true);
+    appendMessage('System Orchestrator', 'Initiating publisher style analysis and generation. This may take a moment...', false);
     
     try {
         const response = await fetch('/api/v1/generate_paper', {
@@ -114,7 +105,9 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: title,
+                target_publisher: publisher,
                 target_journal: journal,
+                article_type: type,
                 research_questions: rqs.length > 0 ? rqs : null,
                 objectives: objs.length > 0 ? objs : null
             })

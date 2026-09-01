@@ -29,12 +29,33 @@ class ResearchSource(BaseModel):
     quartile: JournalRank = JournalRank.UNRANKED
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+class StyleProfile(BaseModel):
+    publisher: str = ""
+    journal: str = ""
+    article_type: str = ""
+    abstract_style: str = "Unstructured"
+    abstract_sections: List[str] = Field(default_factory=list)
+    keyword_label: str = "Keywords"
+    keyword_count: str = "4-6"
+    main_sections: List[str] = Field(default_factory=list)
+    subsection_rules: Dict[str, Any] = Field(default_factory=dict)
+    citation_style: str = "Standard APA"
+    reference_style: str = "Standard APA"
+    table_rules: str = ""
+    figure_rules: str = ""
+    declaration_requirements: List[str] = Field(default_factory=list)
+    formatting_notes: List[str] = Field(default_factory=list)
+    source: str = "Generic Publisher Profile"
+    verification_status: str = "Unverified"
+
 class ResearchState(BaseModel):
     """
     Centralized state object that holds the current progress of the research manuscript.
     """
     session_id: str
-    target_journal: Optional[str] = None  # Added for journal-specific scope
+    target_publisher: Optional[str] = None
+    target_journal: Optional[str] = None  
+    article_type: Optional[str] = "Original Research Article"
     topic: Optional[str] = None
     problem_statement: Optional[str] = None
     research_questions: List[str] = Field(default_factory=list)
@@ -42,9 +63,16 @@ class ResearchState(BaseModel):
     hypotheses: List[str] = Field(default_factory=list)
     sources: List[ResearchSource] = Field(default_factory=list)
     methodology: Dict[str, Any] = Field(default_factory=dict)
+    
+    # New Publisher Style Engine fields
+    style_profile: Optional[StyleProfile] = None
+    manuscript_blueprint: Dict[str, Any] = Field(default_factory=dict)
+    compliance_report: Dict[str, Any] = Field(default_factory=dict)
+    
     manuscript_draft: Dict[str, str] = Field(default_factory=dict) 
     formatting_requirements: Dict[str, Any] = Field(default_factory=dict)
     
     topic_approved: bool = False
+    blueprint_approved: bool = False
     methodology_approved: bool = False
     draft_approved: bool = False

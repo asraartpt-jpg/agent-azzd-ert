@@ -102,14 +102,30 @@
                     <input type="text" id="auto-title" required class="w-full border p-2 rounded">
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Format / Target Journal</label>
-                    <select id="auto-journal" class="w-full p-2 border border-blue-200 rounded">
-                        <option value="Taylor & Francis / Routledge">Taylor & Francis / Routledge</option>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Target Publisher *</label>
+                    <select id="auto-publisher" class="w-full p-2 border border-blue-200 rounded">
                         <option value="Emerald">Emerald</option>
-                        <option value="Science Direct">Science Direct</option>
-                        <option value="Elsevier">Elsevier</option>
-                        <option value="Springer">Springer</option>
+                        <option value="Elsevier / ScienceDirect">Elsevier / ScienceDirect</option>
                         <option value="IEEE">IEEE</option>
+                        <option value="Taylor & Francis">Taylor & Francis</option>
+                        <option value="Springer Nature">Springer Nature</option>
+                        <option value="Auto Recommend">Auto Recommend</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Target Journal (Optional)</label>
+                    <input type="text" id="auto-journal" class="w-full p-2 border border-blue-200 rounded" placeholder="Search and Select Journal">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Article Type</label>
+                    <select id="auto-type" class="w-full p-2 border border-blue-200 rounded">
+                        <option value="Original Research Article">Original Research Article</option>
+                        <option value="Review Article">Review Article</option>
+                        <option value="Systematic Literature Review">Systematic Literature Review</option>
+                        <option value="Conceptual Paper">Conceptual Paper</option>
+                        <option value="Methodological Paper">Methodological Paper</option>
+                        <option value="Case Study">Case Study</option>
+                        <option value="Short Communication">Short Communication</option>
                     </select>
                 </div>
                 <div>
