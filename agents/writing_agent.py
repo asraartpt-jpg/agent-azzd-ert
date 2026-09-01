@@ -5,7 +5,7 @@ from core.config import settings
 
 try:
     from langchain_mistralai.chat_models import ChatMistralAI
-    from langchain.schema import HumanMessage, SystemMessage
+    from langchain_core.messages import HumanMessage, SystemMessage
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
