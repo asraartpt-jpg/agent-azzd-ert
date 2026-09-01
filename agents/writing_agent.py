@@ -22,20 +22,21 @@ class AcademicWritingAgent(BaseAgent):
                 if settings.MISTRAL_API_KEY:
                     refined_content = self._refine_tone_with_mistral(content, style_instruction, section)
                 else:
-                    refined_content = self._refine_tone_mock(content)
+                    refined_content = self._refine_tone_mock(content, style_instruction)
                 state.manuscript_draft[section] = refined_content
                 
         return state
 
     def _refine_tone_with_mistral(self, text: str, style: str, section: str) -> str:
         system_prompt = f"""
-        You are an elite academic editor specializing in publications for Taylor & Francis and Routledge journals.
+        You are an elite academic editor specializing in publications for {style} journals.
         Your task is to take a draft for the section '{section}' and rewrite it to perfectly match the tone, 
-        rigor, and stylistic conventions required by high-impact Taylor & Francis logistics, management, and social science journals.
+        rigor, and stylistic conventions required by high-impact {style} journals.
         
-        TAYLOR & FRANCIS / ROUTLEDGE RULES:
-        - Use British English spelling conventions (e.g., 'operationalisation', 'prioritise', 'recognise', 'behaviour').
-        - Use Author-Date citation format with NO comma between author and year (e.g., "(Willis, Genchev, and Chen 2016)" or "Yang (2016)").
+        GENERAL PUBLISHER RULES:
+        - If {style} is Taylor & Francis, Routledge, or Emerald: Use British English spelling ('operationalisation').
+        - If {style} is IEEE: Use numbered citation format [1], [2].
+        - If {style} is Science Direct, Elsevier, or Springer: Use standard APA Author-Date format.
         - Maintain zero AI plagiarism footprint (do not use cliché AI phrases like "In today's rapidly evolving world", "Delve into", "Tapestry", "It is worth noting").
         - The language must be highly objective, precise, formal, and analytical. Use a passive, empirical voice where appropriate.
         - Do not change the underlying facts, data, or hypotheses.
@@ -63,7 +64,7 @@ class AcademicWritingAgent(BaseAgent):
             print(f"Mistral Writing Error: {e}")
             return self._refine_tone_mock(text)
         
-    def _refine_tone_mock(self, text: str) -> str:
+    def _refine_tone_mock(self, text: str, style: str = "Standard") -> str:
         # Simple string replacements to simulate removing robotic AI language
         banned_phrases = {
             "In today's rapidly evolving world": "Contemporary research indicates",
@@ -76,4 +77,4 @@ class AcademicWritingAgent(BaseAgent):
         for bad, good in banned_phrases.items():
             refined = refined.replace(bad, good)
             
-        return refined + "\n\n[Refined for Taylor & Francis / Routledge Style]"
+        return refined + f"\n\n[Refined for {style} Style]"

@@ -21,6 +21,12 @@ class PublisherFormattingAgent(BaseAgent):
                 state.formatting_requirements = self._get_emerald_guidelines()
             elif "ieee" in target_journal:
                 state.formatting_requirements = self._get_ieee_guidelines()
+            elif "taylor" in target_journal or "routledge" in target_journal:
+                state.formatting_requirements = self._get_taylor_francis_guidelines()
+            elif "elsevier" in target_journal or "science direct" in target_journal:
+                state.formatting_requirements = self._get_elsevier_guidelines()
+            elif "springer" in target_journal:
+                state.formatting_requirements = self._get_springer_guidelines()
             else:
                 state.formatting_requirements = self._get_standard_guidelines()
 
@@ -46,6 +52,33 @@ class PublisherFormattingAgent(BaseAgent):
             "abstract_format": "Unstructured paragraph",
             "mandatory_sections": ["Acknowledgment"],
             "max_words": 10000
+        }
+
+    def _get_taylor_francis_guidelines(self) -> Dict[str, Any]:
+        return {
+            "publisher": "Taylor & Francis / Routledge",
+            "citation_style": "Harvard / APA (Author-Date without comma)",
+            "abstract_format": "Unstructured (up to 200 words)",
+            "mandatory_sections": ["Disclosure Statement", "Data Availability"],
+            "max_words": 8000
+        }
+
+    def _get_elsevier_guidelines(self) -> Dict[str, Any]:
+        return {
+            "publisher": "Elsevier / Science Direct",
+            "citation_style": "APA / Vancouver",
+            "abstract_format": "Graphical Abstract recommended, plus unstructured paragraph",
+            "mandatory_sections": ["Highlights", "CRediT Authorship Contribution Statement"],
+            "max_words": 9000
+        }
+
+    def _get_springer_guidelines(self) -> Dict[str, Any]:
+        return {
+            "publisher": "Springer",
+            "citation_style": "Springer Basic (Author-Date) or Numbered",
+            "abstract_format": "Unstructured paragraph",
+            "mandatory_sections": ["Declarations", "Funding"],
+            "max_words": 8500
         }
 
     def _get_standard_guidelines(self) -> Dict[str, Any]:

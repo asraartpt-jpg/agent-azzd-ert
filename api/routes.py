@@ -86,8 +86,9 @@ async def generate_full_paper(request: GeneratePaperRequest):
         state.manuscript_draft["7. Conclusion"] = f"### 7. Conclusion\n\nThis paper concludes the investigation into {state.topic}."
         state.manuscript_draft["8. Future Research"] = f"### 8. Future Research\n\nFuture studies should expand upon these findings by..."
         
-        # Enforce Taylor & Francis / Routledge style formatting
-        state = orchestrator.route_request(state, "writing", user_input="Taylor & Francis / Routledge style")
+        # Enforce selected publisher style formatting
+        style = state.target_journal if state.target_journal else "Taylor & Francis / Routledge"
+        state = orchestrator.route_request(state, "writing", user_input=f"{style} style")
         state = orchestrator.route_request(state, "citation")
         state = orchestrator.route_request(state, "quality")
         
