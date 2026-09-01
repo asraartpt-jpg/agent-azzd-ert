@@ -156,6 +156,40 @@ document.getElementById('switch-form').addEventListener('submit', async (e) => {
     }
 });
 
+// Handle Guidelines Upload
+document.getElementById('guidelines-upload').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!currentSessionId) {
+        alert("Please generate a manuscript first.");
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('session_id', currentSessionId);
+    formData.append('file', file);
+    
+    appendMessage('You', `[Upload Guidelines] ${file.name}`, true);
+    appendMessage('System Orchestrator', 'Analyzing uploaded guidelines and updating Style Profile...', false);
+    
+    try {
+        const response = await fetch('/api/v1/upload_guidelines', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) throw new Error('API Error');
+        const data = await response.json();
+        
+        appendMessage('System Orchestrator', `Successfully extracted rules from ${file.name}. Your Style Profile has been overridden.`, false);
+        updateUI(data.state);
+        
+    } catch (error) {
+        appendMessage('System', 'Error uploading guidelines.', false);
+    }
+});
+
 // Handle Auto-Generate Submit
 document.getElementById('auto-form').addEventListener('submit', async (e) => {
     e.preventDefault();

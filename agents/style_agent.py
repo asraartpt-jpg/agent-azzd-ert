@@ -15,8 +15,30 @@ class JournalStyleAgent(BaseAgent):
         Determines the publisher profile and creates a manuscript blueprint.
         """
         # Set target publisher/journal if provided in user_input
-        # Format expected: publisher|journal|article_type
+        # Format expected: publisher|journal|article_type OR CUSTOM_GUIDELINES|text
         if user_input:
+            parts = user_input.split("|", 1)
+            if parts[0] == "CUSTOM_GUIDELINES":
+                text = parts[1]
+                if not state.style_profile:
+                    state.style_profile = self._generate_publisher_profile("Custom", "Custom Journal", "Custom Article")
+                
+                # Mock extracting details from text
+                state.style_profile.source = "User-Uploaded Journal Guidelines"
+                state.style_profile.verification_status = "Custom Override"
+                if "APA" in text:
+                    state.style_profile.citation_style = "APA (Extracted)"
+                elif "IEEE" in text:
+                    state.style_profile.citation_style = "IEEE (Extracted)"
+                
+                if "structured abstract" in text.lower():
+                    state.style_profile.abstract_style = "Structured (Extracted)"
+                
+                # Update the blueprint to match the new custom profile
+                state.manuscript_blueprint = self._generate_blueprint(state.style_profile)
+                self._last_message = "Successfully analyzed and applied custom uploaded guidelines."
+                return state
+                
             parts = user_input.split("|")
             if len(parts) > 0 and parts[0]:
                 state.target_publisher = parts[0]

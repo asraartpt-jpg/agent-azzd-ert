@@ -1,7 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import Optional, List
 import uuid
+import io
+
+try:
+    from pypdf import PdfReader
+except ImportError:
+    PdfReader = None
 
 from core.state import ResearchState
 from core.database import save_research_session, get_research_session
@@ -52,12 +58,44 @@ def _get_or_create_state(session_id: str) -> ResearchState:
     if not session_id:
         return ResearchState(session_id=str(uuid.uuid4()))
         
-    # Attempt to load from Supabase
     saved_data = get_research_session(session_id)
     if saved_data:
         return ResearchState(**saved_data)
         
     return ResearchState(session_id=session_id)
+
+@router.post("/upload_guidelines")
+async def upload_guidelines(
+    session_id: str = Form(...),
+    file: UploadFile = File(...)
+):
+    state = _get_or_create_state(session_id)
+    
+    try:
+        content = ""
+        if file.filename.endswith('.pdf'):
+            if PdfReader is None:
+                raise Exception("pypdf is not installed")
+            pdf = PdfReader(io.BytesIO(await file.read()))
+            for page in pdf.pages:
+                text = page.extract_text()
+                if text:
+                    content += text + "\n"
+        else:
+            content = (await file.read()).decode('utf-8')
+            
+        # Pass the extracted text to the Style Agent to parse and override the profile
+        state = orchestrator.route_request(state, "style", user_input=f"CUSTOM_GUIDELINES|{content[:3000]}")
+        
+        save_research_session(state.session_id, state.model_dump())
+        
+        return {
+            "session_id": state.session_id,
+            "state": state.model_dump(),
+            "message": f"Successfully processed guidelines from {file.filename}."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate_paper")
 async def generate_full_paper(request: GeneratePaperRequest):

@@ -84,7 +84,15 @@
                 </div>
                 
                 <div id="tab-style" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full">
-                    <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Active Style Profile</h2>
+                    <div class="flex justify-between items-center mb-6 border-b pb-2">
+                        <h2 class="text-2xl font-bold text-gray-800">Active Style Profile</h2>
+                        <div class="space-x-2">
+                            <input type="file" id="guidelines-upload" accept=".pdf,.txt,.docx" class="hidden">
+                            <button onclick="document.getElementById('guidelines-upload').click()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-upload mr-1"></i> Upload Journal Guidelines
+                            </button>
+                        </div>
+                    </div>
                     <div id="style-profile-content" class="space-y-6">
                         <p class="text-gray-500 italic">No style profile active. Please generate a manuscript.</p>
                     </div>
