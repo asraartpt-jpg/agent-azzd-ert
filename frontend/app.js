@@ -264,7 +264,8 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     const rqs = document.getElementById('auto-rqs').value.split(',').filter(x => x.trim() !== '');
     
     // New fields
-    const objs = document.getElementById('auto-objectives') ? document.getElementById('auto-objectives').value.split(',').filter(x => x.trim() !== '') : [];
+    const objs = document.getElementById('auto-objs') ? document.getElementById('auto-objs').value.split(',').filter(x => x.trim() !== '') : [];
+    const hypos = document.getElementById('auto-hypotheses') ? document.getElementById('auto-hypotheses').value.split(',').filter(x => x.trim() !== '') : [];
     const methodology = document.getElementById('auto-methodology').value;
     const yearPref = document.getElementById('auto-year').value;
     
@@ -287,6 +288,7 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
                 article_type: type,
                 research_questions: rqs.length > 0 ? rqs : null,
                 objectives: objs.length > 0 ? objs : null,
+                hypotheses: hypos.length > 0 ? hypos : null,
                 preferred_methodology: methodology,
                 publication_year_preference: yearPref,
                 journal_quality_filter: qFilters

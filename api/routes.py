@@ -68,6 +68,7 @@ class GeneratePaperRequest(BaseModel):
     article_type: Optional[str] = "Original Research Article"
     research_questions: Optional[List[str]] = None
     objectives: Optional[List[str]] = None
+    hypotheses: Optional[List[str]] = None
     preferred_methodology: Optional[str] = "Auto Recommend"
     publication_year_preference: Optional[str] = "Last 5 years"
     journal_quality_filter: Optional[List[str]] = ["Q1", "Q2", "Q3"]
@@ -126,6 +127,7 @@ async def generate_full_paper(request: GeneratePaperRequest):
         article_type=request.article_type,
         research_questions=request.research_questions or [],
         objectives=request.objectives or [],
+        hypotheses=request.hypotheses or [],
         preferred_methodology=request.preferred_methodology or "Auto Recommend",
         publication_year_preference=request.publication_year_preference or "Last 5 years",
         journal_quality_filter=request.journal_quality_filter or ["Q1", "Q2", "Q3"]
