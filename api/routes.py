@@ -68,6 +68,9 @@ class GeneratePaperRequest(BaseModel):
     article_type: Optional[str] = "Original Research Article"
     research_questions: Optional[List[str]] = None
     objectives: Optional[List[str]] = None
+    preferred_methodology: Optional[str] = "Auto Recommend"
+    publication_year_preference: Optional[str] = "Last 5 years"
+    journal_quality_filter: Optional[List[str]] = ["Q1", "Q2", "Q3"]
 
 def _get_or_create_state(session_id: str) -> ResearchState:
     if not session_id:
