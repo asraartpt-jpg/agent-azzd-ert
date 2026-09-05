@@ -69,6 +69,7 @@ class ResearchState(BaseModel):
     hypotheses: List[str] = Field(default_factory=list)
     sources: List[ResearchSource] = Field(default_factory=list)
     methodology: Dict[str, Any] = Field(default_factory=dict)
+    empirical_data: str = ""
     
     # New Pipeline outputs
     research_intelligence: Dict[str, Any] = Field(default_factory=dict)

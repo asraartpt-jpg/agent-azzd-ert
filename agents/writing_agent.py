@@ -13,34 +13,46 @@ class AcademicWritingAgent(BaseAgent):
 
     def process(self, state: ResearchState, user_input: str = None) -> ResearchState:
         """
-        Reviews the drafted sections and refines the tone to be discipline-appropriate for Science Direct.
+        Generates the manuscript sections based on empirical data, verified sources, and blueprint.
         """
         style_instruction = user_input or "Science Direct Management Business Journals Social science journals style"
+        
+        # Build context
+        context = f"Topic: {state.topic}\n"
+        if state.research_questions:
+            context += f"Research Questions: {', '.join(state.research_questions)}\n"
+        if state.objectives:
+            context += f"Objectives: {', '.join(state.objectives)}\n"
+        if state.hypotheses:
+            context += f"Hypotheses: {', '.join(state.hypotheses)}\n"
+        
+        context += "\n--- Verified Literature References ---\n"
+        for src in state.sources:
+            context += f"Title: {src.title}\nAuthors: {', '.join(src.authors)}\nAbstract: {src.metadata.get('abstract', '')[:300]}\n\n"
+            
+        context += f"\n--- Empirical Data ---\n{state.empirical_data[:3000]}\n"
         
         for section, content in state.manuscript_draft.items():
             if section != "Formatting Checklist":
                 if settings.MISTRAL_API_KEY:
-                    refined_content = self._refine_tone_with_mistral(content, style_instruction, section)
+                    generated_content = self._generate_with_mistral(context, style_instruction, section)
                 else:
-                    refined_content = self._refine_tone_mock(content, style_instruction)
-                state.manuscript_draft[section] = refined_content
+                    generated_content = self._refine_tone_mock(content, style_instruction)
+                state.manuscript_draft[section] = f"### {section}\n\n" + generated_content
                 
         return state
 
-    def _refine_tone_with_mistral(self, text: str, style: str, section: str) -> str:
+    def _generate_with_mistral(self, context: str, style: str, section: str) -> str:
         system_prompt = f"""
-        You are an elite academic editor specializing in publications for {style} journals.
-        Your task is to take a draft for the section '{section}' and rewrite it to perfectly match the tone, 
-        rigor, and stylistic conventions required by high-impact {style} journals.
+        You are an elite academic writer for {style} journals.
+        Your task is to WRITE the content for the section '{section}'.
         
         GENERAL PUBLISHER RULES:
-        - If {style} is Taylor & Francis, Routledge, or Emerald: Use British English spelling ('operationalisation').
-        - If {style} is IEEE: Use numbered citation format [1], [2].
-        - If {style} is Science Direct, Elsevier, or Springer: Use standard APA Author-Date format.
-        - Maintain zero AI plagiarism footprint (do not use cliché AI phrases like "In today's rapidly evolving world", "Delve into", "Tapestry", "It is worth noting").
-        - The language must be highly objective, precise, formal, and analytical. Use a passive, empirical voice where appropriate.
-        - Do not change the underlying facts, data, or hypotheses.
-        - Output ONLY the rewritten text for the section. Do not include meta-commentary.
+        - If {style} is Taylor & Francis or Emerald: Use British English.
+        - If {style} is IEEE: Use numbered citation format [1].
+        - Use standard APA Author-Date format otherwise.
+        - Maintain zero AI plagiarism footprint. Be highly objective, precise, and formal.
+        - Output ONLY the written text for the section. Do not include meta-commentary.
         """
         
         headers = {
@@ -49,10 +61,10 @@ class AcademicWritingAgent(BaseAgent):
         }
         payload = {
             "model": settings.DEFAULT_LLM,
-            "temperature": 0.3,
+            "temperature": 0.4,
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Rewrite the following draft text:\n\n{text}"}
+                {"role": "user", "content": f"Write the section '{section}' based on the following research context, literature, and empirical data:\n\n{context}"}
             ]
         }
         
@@ -62,7 +74,7 @@ class AcademicWritingAgent(BaseAgent):
             return response.json()["choices"][0]["message"]["content"]
         except Exception as e:
             print(f"Mistral Writing Error: {e}")
-            return self._refine_tone_mock(text)
+            return f"[Error connecting to Mistral API: {str(e)}. Ensure MISTRAL_API_KEY is configured in Vercel.]"
         
     def _refine_tone_mock(self, text: str, style: str = "Standard") -> str:
         # Simple string replacements to simulate removing robotic AI language

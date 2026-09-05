@@ -62,6 +62,7 @@ class ChatRequest(BaseModel):
     message: str
 
 class GeneratePaperRequest(BaseModel):
+    session_id: Optional[str] = None
     title: str
     target_publisher: Optional[str] = None
     target_journal: Optional[str] = None
@@ -116,22 +117,70 @@ async def upload_guidelines(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/upload_sources")
+async def upload_sources(
+    session_id: Optional[str] = Form(None),
+    files: List[UploadFile] = File(...)
+):
+    if not session_id:
+        session_id = str(uuid.uuid4())
+    state = _get_or_create_state(session_id)
+    
+    try:
+        from core.state import ResearchSource
+        import uuid
+        
+        for file in files:
+            content = ""
+            if file.filename.endswith('.pdf'):
+                if PdfReader is None:
+                    continue # Skip if no pypdf
+                pdf = PdfReader(io.BytesIO(await file.read()))
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if text:
+                        content += text + "\n"
+                        
+                # Add as verified source
+                src = ResearchSource(
+                    id=str(uuid.uuid4()),
+                    title=f"Uploaded PDF: {file.filename}",
+                    authors=["Unknown Uploaded"],
+                    year=2026,
+                    journal="User Uploaded PDF",
+                    status="VERIFIED",
+                    is_scopus_indexed=True,
+                    is_wos_indexed=True,
+                    quartile="Q1" # Automatically trust user PDF
+                )
+                src.metadata["abstract"] = content[:1500] # store some content
+                state.sources.append(src)
+                
+            elif file.filename.endswith(('.csv', '.txt')):
+                content = (await file.read()).decode('utf-8', errors='ignore')
+                state.empirical_data += f"\n--- Data from {file.filename} ---\n{content}\n"
+                
+        save_research_session(state.session_id, state.model_dump())
+        return {"session_id": state.session_id, "message": f"Successfully processed {len(files)} files."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/generate_paper")
 async def generate_full_paper(request: GeneratePaperRequest):
-    session_id = str(uuid.uuid4())
-    state = ResearchState(
-        session_id=session_id,
-        topic=request.title,
-        target_publisher=request.target_publisher,
-        target_journal=request.target_journal,
-        article_type=request.article_type,
-        research_questions=request.research_questions or [],
-        objectives=request.objectives or [],
-        hypotheses=request.hypotheses or [],
-        preferred_methodology=request.preferred_methodology or "Auto Recommend",
-        publication_year_preference=request.publication_year_preference or "Last 5 years",
-        journal_quality_filter=request.journal_quality_filter or ["Q1", "Q2", "Q3"]
-    )
+    session_id = request.session_id or str(uuid.uuid4())
+    state = _get_or_create_state(session_id)
+    
+    # Update state with incoming request parameters
+    state.topic = request.title
+    state.target_publisher = request.target_publisher
+    state.target_journal = request.target_journal
+    state.article_type = request.article_type
+    state.research_questions = request.research_questions or []
+    state.objectives = request.objectives or []
+    state.hypotheses = request.hypotheses or []
+    state.preferred_methodology = request.preferred_methodology or "Auto Recommend"
+    state.publication_year_preference = request.publication_year_preference or "Last 5 years"
+    state.journal_quality_filter = request.journal_quality_filter or ["Q1", "Q2", "Q3"]
     
     try:
         # STEP 1-4: Input Validation & Research Intelligence
@@ -166,40 +215,9 @@ async def generate_full_paper(request: GeneratePaperRequest):
         if state.manuscript_blueprint and "sections" in state.manuscript_blueprint:
             for sec in state.manuscript_blueprint["sections"]:
                 title = sec["title"]
-                title_lower = title.lower()
-                
-                content = f"### {title}\n\n"
-                if "abstract" in title_lower:
-                    content += f"This study investigates {state.topic}. "
-                    if state.research_questions:
-                        content += f"Specifically, it addresses the following questions: {', '.join(state.research_questions)}. "
-                    content += "Using a robust methodological framework, findings reveal significant relationships that contribute to the current body of literature."
-                elif "keyword" in title_lower or "index" in title_lower:
-                    content += f"{state.topic.split()[0]}, Artificial Intelligence, Technology Adoption, Management"
-                elif "introduction" in title_lower:
-                    content += f"The rapid advancement of technology necessitates a deeper understanding of {state.topic}. "
-                    content += f"Guided by the research objectives, we address critical gaps identified in recent literature regarding this phenomenon."
-                elif "literature" in title_lower or "background" in title_lower or "related" in title_lower:
-                    content += f"Existing literature provides various insights into {state.topic}, yet consensus remains elusive. "
-                    content += "[Detailed synthesis of verified literature to be inserted here based on empirical evidence.]"
-                elif "method" in title_lower:
-                    content += f"This research employs a {state.preferred_methodology} design as proposed by the Methodology Agent. Data was collected via appropriate protocols."
-                elif "result" in title_lower or "analysis" in title_lower:
-                    content += "[Data Analysis Plan: No empirical data uploaded. Analysis simulated for structural template only.]"
-                elif "discussion" in title_lower or "implication" in title_lower:
-                    content += "The findings significantly extend prior models by demonstrating the contextual boundaries of technology adoption. Practically, managers can leverage these insights to formulate better strategies."
-                elif "conclusion" in title_lower:
-                    content += f"In conclusion, this paper provides empirical evidence advancing the understanding of {state.topic}. Future research should validate these findings across different cultural contexts."
-                elif "declaration" in title_lower:
-                    content += "Funding: This research received no specific grant from any funding agency.\nConflicts of Interest: The authors declare no conflict of interest."
-                elif "reference" in title_lower:
-                    content += "[List of formatted references derived from verified sources]"
-                else:
-                    content += f"This section addresses the {title} aspects of {state.topic}, outlining the key theoretical and practical components required by the journal guidelines."
-                    
-                state.manuscript_draft[title] = content
+                state.manuscript_draft[title] = ""
         else:
-            state.manuscript_draft["1. Introduction"] = f"### 1. Introduction\n\nThis study explores {state.topic}."
+            state.manuscript_draft["1. Introduction"] = ""
         
         # STEP 37: Citation Integrity
         state = orchestrator.route_request(state, "citation")
@@ -207,7 +225,7 @@ async def generate_full_paper(request: GeneratePaperRequest):
         # STEP 38: Originality & Writing Quality
         state = orchestrator.route_request(state, "originality")
         
-        # Enforce selected publisher style formatting using Writing Agent
+        # Enforce selected publisher style formatting using Writing Agent (This will now GENERATE the text)
         style_name = state.style_profile.publisher if state.style_profile else request.target_publisher
         state = orchestrator.route_request(state, "writing", user_input=style_name)
         

@@ -278,21 +278,56 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     appendMessage('System Orchestrator', 'Initiating 40-step agentic pipeline. Executing Search Strategy, Evidence Extraction, and Gap Synthesis. This may take a moment...', false);
     
     try {
+        let sessionId = null;
+        
+        // Handle uploads first if any
+        const refsInput = document.getElementById('auto-refs');
+        const dataInput = document.getElementById('auto-data');
+        
+        if ((refsInput && refsInput.files.length > 0) || (dataInput && dataInput.files.length > 0)) {
+            const formData = new FormData();
+            if (refsInput) {
+                for(let i=0; i<refsInput.files.length; i++) {
+                    formData.append('files', refsInput.files[i]);
+                }
+            }
+            if (dataInput && dataInput.files.length > 0) {
+                formData.append('files', dataInput.files[0]);
+            }
+            
+            appendMessage('System', 'Uploading references and empirical data...', false);
+            const uploadRes = await fetch('/api/v1/upload_sources', {
+                method: 'POST',
+                body: formData
+            });
+            if (uploadRes.ok) {
+                const uploadData = await uploadRes.json();
+                sessionId = uploadData.session_id;
+                appendMessage('System', 'Uploads complete. Starting AI generation.', false);
+            }
+        }
+    
+        const payload = {
+            title: title,
+            target_publisher: publisher,
+            target_journal: journal,
+            article_type: type,
+            research_questions: rqs.length > 0 ? rqs : null,
+            objectives: objs.length > 0 ? objs : null,
+            hypotheses: hypos.length > 0 ? hypos : null,
+            preferred_methodology: methodology,
+            publication_year_preference: yearPref,
+            journal_quality_filter: qFilters
+        };
+        
+        if (sessionId) {
+            payload.session_id = sessionId;
+        }
+
         const response = await fetch('/api/v1/generate_paper', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                target_publisher: publisher,
-                target_journal: journal,
-                article_type: type,
-                research_questions: rqs.length > 0 ? rqs : null,
-                objectives: objs.length > 0 ? objs : null,
-                hypotheses: hypos.length > 0 ? hypos : null,
-                preferred_methodology: methodology,
-                publication_year_preference: yearPref,
-                journal_quality_filter: qFilters
-            })
+            body: JSON.stringify(payload)
         });
         
         if (!response.ok) throw new Error('API Error');

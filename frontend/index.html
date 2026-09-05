@@ -197,6 +197,18 @@
                     </div>
                     <p class="text-xs text-red-500 mt-1">Q4 and unverified journals are automatically excluded.</p>
                 </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Upload Reference PDFs (Optional)</label>
+                    <input type="file" id="auto-refs" multiple accept=".pdf" class="w-full border p-2 rounded text-sm">
+                    <p class="text-xs text-gray-500 mt-1">Agent will cite these PDFs. Will also search Semantic Scholar.</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Upload Empirical Data (Optional)</label>
+                    <input type="file" id="auto-data" accept=".csv,.txt" class="w-full border p-2 rounded text-sm">
+                    <p class="text-xs text-gray-500 mt-1">If provided, agent will write the Results based on this data.</p>
+                </div>
+
                 <div class="flex justify-end space-x-2 mt-6">
                     <button type="button" onclick="document.getElementById('auto-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Generate</button>
