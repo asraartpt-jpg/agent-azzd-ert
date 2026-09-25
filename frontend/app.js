@@ -252,6 +252,52 @@ document.getElementById('guidelines-upload').addEventListener('change', async (e
     }
 });
 
+function startNewProject() {
+    currentSessionId = null;
+    currentState = null;
+    
+    const sessionDisplay = document.getElementById('session-id-display');
+    if (sessionDisplay) sessionDisplay.textContent = 'New Session';
+    
+    const docTitle = document.getElementById('doc-title');
+    if (docTitle) docTitle.textContent = '[Untitled Research Paper]';
+    
+    const docContent = document.getElementById('doc-content');
+    if (docContent) docContent.innerHTML = '<p class="text-gray-400 italic text-center mt-10">The manuscript draft is currently empty. Click "Auto-Generate" or chat with an agent to begin.</p>';
+    
+    const styleContent = document.getElementById('style-profile-content');
+    if (styleContent) styleContent.innerHTML = '<p class="text-gray-500 italic">No style profile active. Please generate a manuscript.</p>';
+    
+    const sourceList = document.getElementById('source-list');
+    if (sourceList) sourceList.innerHTML = '<p class="text-gray-500 italic">No sources discovered yet.</p>';
+    
+    const qualityContent = document.getElementById('quality-content');
+    if (qualityContent) qualityContent.innerHTML = '<p class="text-gray-500 italic">No quality metrics available yet. Generate a paper to view scores.</p>';
+    
+    const stateJson = document.getElementById('state-json');
+    if (stateJson) stateJson.textContent = '{}';
+    
+    const chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+        chatBox.innerHTML = `
+            <div class="flex flex-col space-y-1">
+                <span class="text-xs text-gray-500 font-bold ml-2">System Orchestrator</span>
+                <div class="bg-blue-50 text-blue-900 p-3 rounded-lg rounded-tl-none text-sm inline-block max-w-[90%] shadow-sm border border-blue-100">
+                    Started a fresh research project! Click "Auto-Generate" to configure your topic, keywords, and journal guidelines.
+                </div>
+            </div>
+        `;
+    }
+    
+    const autoForm = document.getElementById('auto-form');
+    if (autoForm) autoForm.reset();
+    
+    switchTab('draft');
+    
+    const autoModal = document.getElementById('auto-modal');
+    if (autoModal) autoModal.classList.remove('hidden');
+}
+
 // Handle Auto-Generate Submit
 document.getElementById('auto-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -263,7 +309,9 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     const type = document.getElementById('auto-type').value;
     const rqs = document.getElementById('auto-rqs').value.split(',').filter(x => x.trim() !== '');
     
-    // New fields
+    // New fields & custom keywords
+    const kwInput = document.getElementById('auto-keywords');
+    const keywords = kwInput && kwInput.value ? kwInput.value.split(',').map(k => k.trim()).filter(Boolean) : [];
     const objs = document.getElementById('auto-objs') ? document.getElementById('auto-objs').value.split(',').filter(x => x.trim() !== '') : [];
     const hypos = document.getElementById('auto-hypotheses') ? document.getElementById('auto-hypotheses').value.split(',').filter(x => x.trim() !== '') : [];
     const methodology = document.getElementById('auto-methodology').value;
@@ -274,7 +322,7 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     if (document.getElementById('q2').checked) qFilters.push("Q2");
     if (document.getElementById('q3').checked) qFilters.push("Q3");
     
-    appendMessage('You', `[Auto-Generate Request]\nTitle: ${title}\nMethodology: ${methodology}\nFilters: ${qFilters.join(", ")}`, true);
+    appendMessage('You', `[Auto-Generate Request]\nTitle: ${title}\nKeywords: ${keywords.join(", ") || "Standard"}\nMethodology: ${methodology}\nFilters: ${qFilters.join(", ")}`, true);
     appendMessage('System Orchestrator', 'Initiating 40-step agentic pipeline. Executing Search Strategy, Evidence Extraction, and Gap Synthesis. This may take a moment...', false);
     
     try {
@@ -309,6 +357,7 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     
         const payload = {
             title: title,
+            keywords: keywords.length > 0 ? keywords : null,
             target_publisher: publisher,
             target_journal: journal,
             article_type: type,

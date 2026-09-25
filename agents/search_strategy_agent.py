@@ -26,7 +26,14 @@ class SearchStrategyAgent(BaseAgent):
         return name
 
     def process(self, state: ResearchState, user_input: str = None) -> ResearchState:
-        query_parts = [state.topic or "technology adoption"]
+        query_parts = []
+        if state.keywords and len(state.keywords) > 0:
+            query_parts.extend(state.keywords[:3])
+        if state.topic:
+            query_parts.append(state.topic)
+        elif not query_parts:
+            query_parts.append("technology adoption")
+            
         if state.objectives:
             query_parts.append(state.objectives[0])
             
