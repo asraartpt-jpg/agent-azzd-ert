@@ -298,17 +298,29 @@
                     <input type="text" id="auto-keywords" class="w-full border border-gray-300 p-2 rounded-lg text-xs" placeholder="E.g. Agentic AI, TAM, UTAUT, Employee Trust, SmartPLS, SEM">
                     <p class="text-[11px] text-gray-500 mt-1">The agent will use these exact keywords for literature retrieval and section synthesis.</p>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Research Questions (Optional, comma separated)</label>
-                    <input type="text" id="auto-rqs" class="w-full border border-gray-300 p-2 rounded-lg text-xs" placeholder="RQ1: ..., RQ2: ...">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-cube text-indigo-600 mr-1"></i> Independent Variables (IV1, IV2...)</label>
+                        <textarea id="auto-ivs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="IV1: Perceived AI Agency&#10;IV2: Perceived Ease of Use&#10;IV3: Autonomy Support"></textarea>
+                        <p class="text-[10px] text-gray-500 mt-0.5">Separate with newlines or commas</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-chart-line text-purple-600 mr-1"></i> Dependent Variables (DV1, DV2...)</label>
+                        <textarea id="auto-dvs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="DV1: Intention to Adopt&#10;DV2: Employee Task Performance&#10;DV3: Strategic Agility"></textarea>
+                        <p class="text-[10px] text-gray-500 mt-0.5">Separate with newlines or commas</p>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Research Objectives (Optional, comma separated)</label>
-                    <input type="text" id="auto-objs" class="w-full border border-gray-300 p-2 rounded-lg text-xs">
+                    <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-question-circle text-blue-600 mr-1"></i> Research Questions (RQ1, RQ2...)</label>
+                    <textarea id="auto-rqs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="RQ1: What structural determinants govern agentic AI adoption?&#10;RQ2: How does autonomy support mediate task performance?"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Research Hypotheses (Optional, comma separated)</label>
-                    <input type="text" id="auto-hypotheses" class="w-full border border-gray-300 p-2 rounded-lg text-xs" placeholder="E.g. H1: Perceived agency positively impacts employee task performance">
+                    <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-bullseye text-emerald-600 mr-1"></i> Research Objectives (RO1, RO2...)</label>
+                    <textarea id="auto-objs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="RO1: To evaluate the impact of perceived agency on usefulness.&#10;RO2: To analyze mediation mechanisms in organizational workflows."></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-lightbulb text-amber-500 mr-1"></i> Research Hypotheses (H1, H2, H3...)</label>
+                    <textarea id="auto-hypotheses" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="H1: Perceived AI agency positively impacts perceived usefulness.&#10;H2: Autonomy support positively impacts employee task performance."></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>

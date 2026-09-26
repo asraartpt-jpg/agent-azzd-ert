@@ -585,6 +585,20 @@ document.getElementById('guidelines-upload').addEventListener('change', async (e
     }
 });
 
+// Helper to parse and serialize list items with standardized prefixes (e.g., RQ1:, RO1:, H1:, IV1:, DV1:)
+function parseSerialList(rawText, prefix) {
+    if (!rawText || !rawText.trim()) return [];
+    let items = rawText.includes('\n') 
+        ? rawText.split('\n') 
+        : rawText.split(/[,;]/);
+    
+    return items.map(x => x.trim()).filter(Boolean).map((item, idx) => {
+        const regex = new RegExp(`^${prefix}\\s*\\d*\\s*[:.-]?\\s*`, 'i');
+        const cleanContent = item.replace(regex, '').trim();
+        return `${prefix}${idx + 1}: ${cleanContent || item}`;
+    });
+}
+
 // Handle Auto-Generate Submit
 document.getElementById('auto-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -594,12 +608,25 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     const publisher = document.getElementById('auto-publisher').value;
     const journal = document.getElementById('auto-journal').value;
     const type = document.getElementById('auto-type').value;
-    const rqs = document.getElementById('auto-rqs').value.split(',').map(x => x.trim()).filter(Boolean);
     
     const kwInput = document.getElementById('auto-keywords');
     const keywords = kwInput && kwInput.value ? kwInput.value.split(',').map(k => k.trim()).filter(Boolean) : [];
-    const objs = document.getElementById('auto-objs') ? document.getElementById('auto-objs').value.split(',').map(x => x.trim()).filter(Boolean) : [];
-    const hypos = document.getElementById('auto-hypotheses') ? document.getElementById('auto-hypotheses').value.split(',').map(x => x.trim()).filter(Boolean) : [];
+    
+    const ivsInput = document.getElementById('auto-ivs');
+    const ivs = ivsInput ? parseSerialList(ivsInput.value, 'IV') : [];
+    
+    const dvsInput = document.getElementById('auto-dvs');
+    const dvs = dvsInput ? parseSerialList(dvsInput.value, 'DV') : [];
+    
+    const rqsInput = document.getElementById('auto-rqs');
+    const rqs = rqsInput ? parseSerialList(rqsInput.value, 'RQ') : [];
+    
+    const objsInput = document.getElementById('auto-objs');
+    const objs = objsInput ? parseSerialList(objsInput.value, 'RO') : [];
+    
+    const hyposInput = document.getElementById('auto-hypotheses');
+    const hypos = hyposInput ? parseSerialList(hyposInput.value, 'H') : [];
+    
     const methodology = document.getElementById('auto-methodology').value;
     const yearPref = document.getElementById('auto-year').value;
     
@@ -610,8 +637,15 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     
     setActivePublisherButton(publisher);
     
-    appendMessage('You', `[Auto-Generate Request]\nTitle: ${title}\nPublisher: ${publisher}\nKeywords: ${keywords.join(", ") || "Domain Specific"}\nMethodology: ${methodology}`, true);
-    appendMessage('System Orchestrator', `Executing 40-step agentic pipeline for **${publisher}** format. Generating Search Strategy, Theoretical Grounding, Hypotheses, and Empirical Findings...`, false);
+    let summaryMsg = `[Auto-Generate Request]\nTitle: ${title}\nPublisher: ${publisher}\nKeywords: ${keywords.join(", ") || "Domain Specific"}`;
+    if (ivs.length > 0) summaryMsg += `\nIndependent Variables: ${ivs.join(", ")}`;
+    if (dvs.length > 0) summaryMsg += `\nDependent Variables: ${dvs.join(", ")}`;
+    if (rqs.length > 0) summaryMsg += `\nResearch Questions: ${rqs.join(", ")}`;
+    if (objs.length > 0) summaryMsg += `\nResearch Objectives: ${objs.join(", ")}`;
+    if (hypos.length > 0) summaryMsg += `\nHypotheses: ${hypos.join(", ")}`;
+    
+    appendMessage('You', summaryMsg, true);
+    appendMessage('System Orchestrator', `Executing 40-step agentic pipeline for **${publisher}** format with structured IVs, DVs, RQs, ROs, and Hypotheses...`, false);
     
     try {
         let sessionId = currentSessionId;
@@ -651,6 +685,8 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
             target_publisher: publisher,
             target_journal: journal,
             article_type: type,
+            independent_variables: ivs.length > 0 ? ivs : null,
+            dependent_variables: dvs.length > 0 ? dvs : null,
             research_questions: rqs.length > 0 ? rqs : null,
             objectives: objs.length > 0 ? objs : null,
             hypotheses: hypos.length > 0 ? hypos : null,

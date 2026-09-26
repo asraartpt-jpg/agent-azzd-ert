@@ -70,6 +70,8 @@ class GeneratePaperRequest(BaseModel):
     research_questions: Optional[List[str]] = None
     objectives: Optional[List[str]] = None
     hypotheses: Optional[List[str]] = None
+    independent_variables: Optional[List[str]] = None
+    dependent_variables: Optional[List[str]] = None
     keywords: Optional[List[str]] = None
     preferred_methodology: Optional[str] = "Auto Recommend"
     publication_year_preference: Optional[str] = "Last 5 years"
@@ -179,6 +181,8 @@ async def generate_full_paper(request: GeneratePaperRequest):
     state.research_questions = request.research_questions or []
     state.objectives = request.objectives or []
     state.hypotheses = request.hypotheses or []
+    state.independent_variables = request.independent_variables or []
+    state.dependent_variables = request.dependent_variables or []
     state.keywords = request.keywords or []
     state.preferred_methodology = request.preferred_methodology or "Auto Recommend"
     state.publication_year_preference = request.publication_year_preference or "Last 5 years"

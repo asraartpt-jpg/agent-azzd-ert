@@ -67,6 +67,8 @@ class ResearchState(BaseModel):
     research_questions: List[str] = Field(default_factory=list)
     objectives: List[str] = Field(default_factory=list)
     hypotheses: List[str] = Field(default_factory=list)
+    independent_variables: List[str] = Field(default_factory=list)
+    dependent_variables: List[str] = Field(default_factory=list)
     keywords: List[str] = Field(default_factory=list)
     sources: List[ResearchSource] = Field(default_factory=list)
     methodology: Dict[str, Any] = Field(default_factory=dict)
