@@ -9,6 +9,27 @@ const STORAGE_KEY = "ai_research_projects_v3";
 // Initialize Project Manager on load
 document.addEventListener('DOMContentLoaded', () => {
     initProjectManager();
+    
+    // Close modals on Escape key or backdrop click
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            ['auto-modal', 'switch-modal', 'new-project-modal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+        }
+    });
+
+    ['auto-modal', 'switch-modal', 'new-project-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', (e) => {
+                if (e.target === el) {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+    });
 });
 
 function getStoredProjects() {
