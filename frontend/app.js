@@ -4,7 +4,7 @@ let currentSessionId = null;
 let currentState = null;
 let currentPublisher = "Emerald";
 
-const STORAGE_KEY = "ai_research_projects_v2";
+const STORAGE_KEY = "ai_research_projects_v3";
 
 // Initialize Project Manager on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,25 +47,63 @@ function initProjectManager() {
         saveStoredProjects(projects);
     }
 
-    renderProjectSelector(projects);
+    renderProjectFolders(projects);
+    
     // Load the first or last active project
     const activeId = localStorage.getItem("ai_active_project_id") || projects[0].id;
     const targetProj = projects.find(p => p.id === activeId) || projects[0];
     loadProject(targetProj.id);
 }
 
-function renderProjectSelector(projects) {
-    const selector = document.getElementById('project-selector');
-    if (!selector) return;
-    selector.innerHTML = "";
-    
+function renderProjectFolders(projects) {
+    const list = document.getElementById('project-folders-list');
+    if (!list) return;
+    list.innerHTML = "";
+
     projects.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.name;
-        if (p.id === currentProjectId) opt.selected = true;
-        selector.appendChild(opt);
+        const isActive = p.id === currentProjectId;
+        const activeClass = isActive 
+            ? "bg-slate-800 border-emerald-500 text-white shadow-md ring-1 ring-emerald-500/50" 
+            : "bg-slate-900/60 hover:bg-slate-800/80 border-slate-800 text-slate-300";
+        const folderIcon = isActive 
+            ? "fa-folder-open text-amber-400" 
+            : "fa-folder text-amber-500/80";
+
+        const hasDraft = p.state && p.state.manuscript_draft && Object.keys(p.state.manuscript_draft).length > 0;
+        const draftBadge = hasDraft 
+            ? `<span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800/80 px-1.5 py-0.5 rounded font-mono font-bold">10 Sec</span>` 
+            : `<span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">New</span>`;
+
+        const dateStr = new Date(p.createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+        const itemHtml = `
+            <div class="group relative flex flex-col p-2.5 rounded-lg border transition cursor-pointer ${activeClass}" onclick="switchProject('${p.id}')">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2 truncate flex-1 mr-1">
+                        <i class="fas ${folderIcon} text-sm flex-shrink-0"></i>
+                        <span class="text-xs font-semibold truncate text-slate-100" title="${p.name}">${p.name}</span>
+                    </div>
+                    ${draftBadge}
+                </div>
+                
+                <div class="flex items-center justify-between mt-1.5 text-[11px] text-slate-400">
+                    <span class="truncate max-w-[120px] text-emerald-400 font-medium">${p.publisher || 'Emerald'}</span>
+                    <div class="flex items-center space-x-1">
+                        <span class="text-[10px] text-slate-500">${dateStr}</span>
+                        <button onclick="event.stopPropagation(); deleteProjectById('${p.id}')" class="opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 text-xs transition" title="Delete folder">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        list.insertAdjacentHTML('beforeend', itemHtml);
     });
+
+    const countDisplay = document.getElementById('projects-count-display');
+    if (countDisplay) {
+        countDisplay.textContent = `${projects.length} ${projects.length === 1 ? 'Project Folder' : 'Project Folders'}`;
+    }
 }
 
 function openNewProjectModal() {
@@ -88,7 +126,6 @@ document.getElementById('new-project-form').addEventListener('submit', (e) => {
 });
 
 function createNewProject(name, topic = "") {
-    // Save current active project first
     saveCurrentProject();
 
     const newProj = {
@@ -102,8 +139,8 @@ function createNewProject(name, topic = "") {
         chatHistory: `
             <div class="flex flex-col space-y-1">
                 <span class="text-xs text-gray-500 font-bold ml-2">System Orchestrator</span>
-                <div class="bg-blue-50 text-blue-900 p-3 rounded-lg rounded-tl-none text-sm inline-block max-w-[90%] shadow-sm border border-blue-100">
-                    Project <strong>"${name}"</strong> created! Click "Auto-Generate" or configure your research parameters to start writing.
+                <div class="bg-blue-50 text-blue-900 p-3 rounded-lg rounded-tl-none text-xs inline-block max-w-[95%] shadow-sm border border-blue-100 leading-relaxed">
+                    Created new project folder: <strong>"${name}"</strong>. Click "Auto-Generate" or configure research settings to start.
                 </div>
             </div>
         `,
@@ -114,16 +151,15 @@ function createNewProject(name, topic = "") {
     projects.unshift(newProj);
     saveStoredProjects(projects);
 
-    renderProjectSelector(projects);
+    renderProjectFolders(projects);
     loadProject(newProj.id);
 
-    // Pre-fill auto title if topic given
     if (topic) {
         const autoTitle = document.getElementById('auto-title');
         if (autoTitle) autoTitle.value = topic;
     }
     
-    // Automatically open Auto-Generate Modal for fast start
+    // Automatically open Auto-Generate Modal
     const autoModal = document.getElementById('auto-modal');
     if (autoModal) autoModal.classList.remove('hidden');
 }
@@ -145,6 +181,8 @@ function loadProject(projectId) {
     currentPublisher = proj.publisher || "Emerald";
     localStorage.setItem("ai_active_project_id", currentProjectId);
 
+    renderProjectFolders(projects);
+
     // Update UI elements
     const sessionDisplay = document.getElementById('session-id-display');
     if (sessionDisplay) sessionDisplay.textContent = currentSessionId.substring(0, 8) + '...';
@@ -152,27 +190,22 @@ function loadProject(projectId) {
     const projectBadge = document.getElementById('doc-project-badge');
     if (projectBadge) projectBadge.textContent = proj.name;
 
-    const selector = document.getElementById('project-selector');
-    if (selector) selector.value = currentProjectId;
-
     // Restore Chat Box
     const chatBox = document.getElementById('chat-box');
     if (chatBox) {
         chatBox.innerHTML = proj.chatHistory || `
             <div class="flex flex-col space-y-1">
                 <span class="text-xs text-gray-500 font-bold ml-2">System Orchestrator</span>
-                <div class="bg-blue-50 text-blue-900 p-3 rounded-lg rounded-tl-none text-sm inline-block max-w-[90%] shadow-sm border border-blue-100">
-                    Active Project: <strong>${proj.name}</strong>. Ready to write your manuscript!
+                <div class="bg-blue-50 text-blue-900 p-3 rounded-lg rounded-tl-none text-xs inline-block max-w-[95%] shadow-sm border border-blue-100 leading-relaxed">
+                    Active Project: <strong>${proj.name}</strong>. Ready to draft your 10-section manuscript!
                 </div>
             </div>
         `;
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Highlight active publisher format
     setActivePublisherButton(currentPublisher);
 
-    // If project has saved state, restore it, otherwise clean slate
     if (proj.state) {
         updateUI(proj.state);
     } else {
@@ -195,21 +228,25 @@ function saveCurrentProject() {
     }
 }
 
-function deleteCurrentProject() {
+function deleteProjectById(projectId) {
     let projects = getStoredProjects();
     if (projects.length <= 1) {
-        alert("You must keep at least one project. Create another before deleting this one.");
+        alert("You must keep at least one project folder. Create another before deleting this one.");
         return;
     }
-    const curr = projects.find(p => p.id === currentProjectId);
-    if (!confirm(`Are you sure you want to delete project "${curr ? curr.name : ''}"? This will delete all saved manuscript drafts and data for this project.`)) {
+    const target = projects.find(p => p.id === projectId);
+    if (!confirm(`Delete project folder "${target ? target.name : ''}"? This will delete all saved manuscript drafts and data in this folder.`)) {
         return;
     }
 
-    projects = projects.filter(p => p.id !== currentProjectId);
+    projects = projects.filter(p => p.id !== projectId);
     saveStoredProjects(projects);
-    renderProjectSelector(projects);
-    loadProject(projects[0].id);
+
+    if (currentProjectId === projectId) {
+        loadProject(projects[0].id);
+    } else {
+        renderProjectFolders(projects);
+    }
 }
 
 function resetDocViews() {
@@ -220,13 +257,13 @@ function resetDocViews() {
     if (docContent) docContent.innerHTML = '<p class="text-gray-400 italic text-center mt-10">The manuscript draft is currently empty. Click "Auto-Generate" or choose a publisher format to start.</p>';
 
     const styleContent = document.getElementById('style-profile-content');
-    if (styleContent) styleContent.innerHTML = '<p class="text-gray-500 italic">No style profile active. Please generate a manuscript.</p>';
+    if (styleContent) styleContent.innerHTML = '<p class="text-gray-500 italic text-sm">No style profile active. Please generate a manuscript.</p>';
 
     const sourceList = document.getElementById('source-list');
-    if (sourceList) sourceList.innerHTML = '<p class="text-gray-500 italic">No sources discovered yet.</p>';
+    if (sourceList) sourceList.innerHTML = '<p class="text-gray-500 italic text-sm">No sources discovered yet.</p>';
 
     const qualityContent = document.getElementById('quality-content');
-    if (qualityContent) qualityContent.innerHTML = '<p class="text-gray-500 italic">No quality metrics available yet. Generate a paper to view scores.</p>';
+    if (qualityContent) qualityContent.innerHTML = '<p class="text-gray-500 italic text-sm">No quality metrics available yet. Generate a paper to view scores.</p>';
 
     const stateJson = document.getElementById('state-json');
     if (stateJson) stateJson.textContent = '{}';
@@ -254,13 +291,13 @@ function switchTab(tabId) {
 
 function formatMarkdown(text) {
     if (!text) return "";
-    let html = text.replace(/### (.*)/g, '<h3 class="text-xl font-bold mt-6 mb-2 border-b pb-1 text-gray-800">$1</h3>');
-    html = html.replace(/#### (.*)/g, '<h4 class="text-lg font-semibold mt-4 mb-2 text-gray-800">$1</h4>');
+    let html = text.replace(/### (.*)/g, '<h3 class="text-lg font-bold mt-5 mb-2 border-b pb-1 text-gray-800">$1</h3>');
+    html = html.replace(/#### (.*)/g, '<h4 class="text-base font-semibold mt-3.5 mb-1.5 text-gray-800">$1</h4>');
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/\n\n/g, '</p><p class="mb-4 text-gray-800 leading-relaxed">');
-    html = html.replace(/\n- (.*)/g, '<li class="ml-5 list-disc text-gray-700">$1</li>');
-    return `<p class="mb-4 text-gray-800 leading-relaxed">${html}</p>`;
+    html = html.replace(/\n\n/g, '</p><p class="mb-3.5 text-gray-800 leading-relaxed text-sm">');
+    html = html.replace(/\n- (.*)/g, '<li class="ml-5 list-disc text-gray-700 text-sm">$1</li>');
+    return `<p class="mb-3.5 text-gray-800 leading-relaxed text-sm">${html}</p>`;
 }
 
 function setActivePublisherButton(publisherName) {
@@ -354,7 +391,7 @@ function updateUI(state) {
     if (state.style_profile) {
         const prof = state.style_profile;
         styleContent.innerHTML = `
-            <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg border">
+            <div class="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-4 rounded-lg border">
                 <div><strong>Target Publisher:</strong> <span class="text-blue-700 font-bold">${prof.publisher}</span></div>
                 <div><strong>Target Journal:</strong> ${prof.journal}</div>
                 <div><strong>Article Type:</strong> ${prof.article_type}</div>
@@ -366,15 +403,15 @@ function updateUI(state) {
             </div>
             
             <div class="mt-4">
-                <h4 class="font-bold border-b pb-1 mb-2 text-gray-800">Heading & Section Structure</h4>
-                <ul class="list-disc ml-5 text-sm space-y-1 text-gray-700">
+                <h4 class="font-bold border-b pb-1 mb-2 text-gray-800 text-xs">Heading & Section Structure</h4>
+                <ul class="list-disc ml-5 text-xs space-y-1 text-gray-700">
                     ${prof.main_sections.map(s => `<li>${s}</li>`).join('')}
                 </ul>
             </div>
             
             <div class="mt-4">
-                <h4 class="font-bold border-b pb-1 mb-2 text-gray-800">Mandatory Declarations</h4>
-                <ul class="list-disc ml-5 text-sm space-y-1 text-gray-700">
+                <h4 class="font-bold border-b pb-1 mb-2 text-gray-800 text-xs">Mandatory Declarations</h4>
+                <ul class="list-disc ml-5 text-xs space-y-1 text-gray-700">
                     ${prof.declaration_requirements.length > 0 ? prof.declaration_requirements.map(d => `<li>${d}</li>`).join('') : "<li>None specified</li>"}
                 </ul>
             </div>
@@ -390,34 +427,32 @@ function updateUI(state) {
         const writingScore = 92;
         
         qualityContent.innerHTML = `
-            <div class="grid grid-cols-2 gap-6">
-                <!-- Source Quality -->
-                <div class="bg-blue-50 p-5 rounded-xl border border-blue-100">
-                    <h3 class="font-bold text-blue-800 mb-3 border-b border-blue-200 pb-1">Source Quality & Quartiles</h3>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <h3 class="font-bold text-blue-800 mb-2 border-b border-blue-200 pb-1 text-xs">Source Quality & Quartiles</h3>
+                    <div class="grid grid-cols-2 gap-1.5 text-xs">
                         <div>Total Sources: <span class="font-bold">${total}</span></div>
                         <div>Verified Sources: <span class="font-bold text-green-600">${verified}</span></div>
                         <div>Q1 Sources: <span class="font-bold text-blue-700">${state.sources.filter(s => s.quartile === 'Q1').length}</span></div>
                         <div>Q2 Sources: <span class="font-bold">${state.sources.filter(s => s.quartile === 'Q2').length}</span></div>
                         <div>Q3 Sources: <span class="font-bold">${state.sources.filter(s => s.quartile === 'Q3').length}</span></div>
-                        <div>Excluded (Q4/Unverified): <span class="font-bold text-red-500">${total - verified}</span></div>
+                        <div>Excluded: <span class="font-bold text-red-500">${total - verified}</span></div>
                     </div>
                 </div>
                 
-                <!-- Output Quality -->
-                <div class="bg-purple-50 p-5 rounded-xl border border-purple-100">
-                    <h3 class="font-bold text-purple-800 mb-3 border-b border-purple-200 pb-1">Originality & Writing Rigor</h3>
-                    <div class="space-y-2 text-sm">
+                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                    <h3 class="font-bold text-purple-800 mb-2 border-b border-purple-200 pb-1 text-xs">Originality & Writing Rigor</h3>
+                    <div class="space-y-1.5 text-xs">
                         <div class="flex justify-between">
-                            <span>Citation Integrity Score:</span>
+                            <span>Citation Integrity:</span>
                             <span class="font-bold text-green-600">${citationScore}/100</span>
                         </div>
                         <div class="flex justify-between">
-                            <span>Academic Writing Quality:</span>
+                            <span>Academic Writing:</span>
                             <span class="font-bold text-green-600">${writingScore}/100</span>
                         </div>
                         <div class="flex justify-between">
-                            <span>Unsupported Claims Detected:</span>
+                            <span>Unsupported Claims:</span>
                             <span class="font-bold text-green-600">0</span>
                         </div>
                         <div class="flex justify-between">
@@ -427,14 +462,13 @@ function updateUI(state) {
                     </div>
                 </div>
                 
-                <!-- Format Compliance -->
-                <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 col-span-2">
-                    <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1">Journal Compliance Overview</h3>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 col-span-2">
+                    <h3 class="font-bold text-gray-800 mb-2 border-b border-gray-300 pb-1 text-xs">Journal Compliance Overview</h3>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
                         <div>Publisher Style: <span class="font-bold text-indigo-700">${state.target_publisher}</span></div>
                         <div>Citation Standard: <span class="font-bold">${state.style_profile ? state.style_profile.citation_style : 'Standard APA'}</span></div>
-                        <div>Methodology Executed: <span class="font-bold">${state.preferred_methodology}</span></div>
-                        <div>Empirical Data Status: <span class="font-bold text-emerald-600">${state.empirical_data ? 'Empirical Dataset Active' : 'PLS-SEM Empirical Plan Active'}</span></div>
+                        <div>Methodology: <span class="font-bold">${state.preferred_methodology}</span></div>
+                        <div>Data Status: <span class="font-bold text-emerald-600">${state.empirical_data ? 'Empirical Dataset Active' : 'PLS-SEM Empirical Plan'}</span></div>
                     </div>
                 </div>
             </div>
@@ -449,14 +483,14 @@ function updateUI(state) {
             let badgeColor = src.status === 'VERIFIED' ? 'bg-green-100 text-green-800' : 
                              src.status === 'REJECTED' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
             htmlSources += `
-                <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
+                <div class="bg-white p-3 border border-gray-200 rounded-lg shadow-xs">
                     <div class="flex justify-between items-start">
-                        <h4 class="font-semibold text-blue-900 text-sm">${src.title}</h4>
-                        <span class="text-xs px-2 py-0.5 rounded-full font-bold ${badgeColor}">${src.status} [${src.quartile || 'Q1'}]</span>
+                        <h4 class="font-semibold text-blue-900 text-xs">${src.title}</h4>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeColor}">${src.status} [${src.quartile || 'Q1'}]</span>
                     </div>
-                    <p class="text-xs text-gray-600 mt-1">${(src.authors || []).join(', ')} (${src.year}) - <em>${src.journal}</em></p>
-                    <div class="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                        <strong>Abstract:</strong> ${src.metadata && src.metadata.abstract ? src.metadata.abstract.substring(0, 200) + '...' : 'Verified indexed publication'}
+                    <p class="text-[11px] text-gray-600 mt-1">${(src.authors || []).join(', ')} (${src.year}) - <em>${src.journal}</em></p>
+                    <div class="mt-1.5 text-[11px] text-gray-500 bg-gray-50 p-2 rounded">
+                        <strong>Abstract:</strong> ${src.metadata && src.metadata.abstract ? src.metadata.abstract.substring(0, 180) + '...' : 'Verified indexed publication'}
                     </div>
                 </div>
             `;
@@ -474,8 +508,8 @@ function appendMessage(sender, text, isUser) {
     
     const msgHtml = `
         <div class="flex flex-col ${alignClass} space-y-1">
-            <span class="text-xs text-gray-500 font-bold mx-2">${title}</span>
-            <div class="${bgClass} p-3 rounded-lg text-sm inline-block max-w-[90%] shadow-sm leading-relaxed">
+            <span class="text-[10px] text-gray-500 font-bold mx-1">${title}</span>
+            <div class="${bgClass} p-2.5 rounded-lg text-xs inline-block max-w-[95%] shadow-sm leading-relaxed">
                 ${text}
             </div>
         </div>
@@ -492,9 +526,6 @@ document.getElementById('switch-form').addEventListener('submit', async (e) => {
     document.getElementById('switch-modal').classList.add('hidden');
     
     const publisher = document.getElementById('switch-publisher').value;
-    const journal = document.getElementById('switch-journal').value;
-    const type = document.getElementById('switch-type').value;
-    
     await switchPublisherFormat(publisher);
 });
 
@@ -588,7 +619,7 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
             if (uploadRes.ok) {
                 const uploadData = await uploadRes.json();
                 sessionId = uploadData.session_id;
-                appendMessage('System', 'Uploads indexed. Generating complete manuscript draft...', false);
+                appendMessage('System', 'Uploads indexed. Generating complete 10-section manuscript draft...', false);
             }
         }
     
@@ -616,7 +647,7 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
         if (!response.ok) throw new Error('API Error');
         const data = await response.json();
         
-        appendMessage('System Orchestrator', `Paper generated successfully for **${publisher}**! All sections drafted with verified Q1 citations.`, false);
+        appendMessage('System Orchestrator', `10-Section Paper generated successfully for **${publisher}**! Check the Manuscript Draft and Quality Dashboard.`, false);
         updateUI(data.state);
         saveCurrentProject();
         switchTab('draft');
