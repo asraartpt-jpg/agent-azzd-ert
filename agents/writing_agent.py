@@ -37,7 +37,31 @@ class AcademicWritingAgent(BaseAgent):
         if state.empirical_data:
             context += f"\n--- Empirical Dataset ---\n{state.empirical_data[:3000]}\n"
         
-        for section in list(state.manuscript_draft.keys()):
+        # Ensure full 10-section structure is always populated
+        sections_to_write = []
+        if state.manuscript_blueprint and "sections" in state.manuscript_blueprint and len(state.manuscript_blueprint["sections"]) > 0:
+            sections_to_write = [sec["title"] for sec in state.manuscript_blueprint["sections"]]
+        elif state.manuscript_draft and len(state.manuscript_draft) > 0:
+            sections_to_write = list(state.manuscript_draft.keys())
+        else:
+            sections_to_write = [
+                "Abstract",
+                "Keywords",
+                "1. Introduction",
+                "2. Theoretical Background",
+                "3. Literature Review",
+                "4. Hypotheses Framework",
+                "5. Methodology and Research Design",
+                "6. Data Analysis and Interpretation",
+                "7. Results and Discussions",
+                "8. Theoretical Contributions",
+                "9. Conclusions",
+                "10. Limitations and Future Research",
+                "Declarations & Statements",
+                "References"
+            ]
+        
+        for section in sections_to_write:
             if section != "Formatting Checklist":
                 generated_content = ""
                 # Attempt Mistral generation if API key is provided
