@@ -71,47 +71,74 @@ class JournalStyleAgent(BaseAgent):
         )
         
         pub_lower = publisher.lower()
-        if "emerald" in pub_lower:
-            profile.abstract_style = "Structured"
-            profile.abstract_sections = ["Purpose", "Design/methodology/approach", "Findings", "Originality/value"]
-            profile.main_sections = ["Introduction", "Literature Review", "Theoretical Foundation", "Research Methodology", "Findings", "Discussion", "Implications", "Conclusion"]
-            profile.citation_style = "Harvard"
-            profile.reference_style = "Harvard"
-            profile.declaration_requirements = ["Data Availability", "Conflict of Interest"]
-            profile.formatting_notes = ["Emphasize clear managerial relevance", "Explicit theoretical contribution"]
-        
+        if "wiley" in pub_lower:
+            profile.abstract_style = "Structured / Abstract"
+            profile.abstract_sections = ["Background", "Methods", "Results", "Conclusions"]
+            profile.main_sections = ["1 | INTRODUCTION", "2 | THEORETICAL FOUNDATION AND HYPOTHESES", "3 | RESEARCH METHODOLOGY", "4 | EMPIRICAL FINDINGS", "5 | DISCUSSION", "6 | IMPLICATIONS FOR PRACTICE AND THEORY", "7 | CONCLUSION"]
+            profile.citation_style = "APA 7th / Harvard"
+            profile.reference_style = "APA 7th"
+            profile.declaration_requirements = ["CRediT Authorship Contribution Statement", "Conflict of Interest Statement", "Data Availability Statement", "Funding Statement"]
+            profile.formatting_notes = ["Use pipe delimiter hierarchy '1 | INTRODUCTION'", "High focus on organizational relevance & structural empirical rigor"]
+            
+        elif "sciencedirect" in pub_lower or "elsevier" in pub_lower:
+            profile.abstract_style = "Unstructured Paragraph + Optional Graphical Abstract"
+            profile.main_sections = ["1. Introduction", "2. Theoretical background and hypotheses", "3. Research methodology", "4. Empirical findings and analysis", "5. Discussion", "6. Conclusion and policy implications"]
+            profile.citation_style = "APA / Vancouver"
+            profile.reference_style = "APA 7th"
+            profile.declaration_requirements = ["Highlights (3-5 Bullet Points)", "CRediT Authorship Contribution Statement", "Declaration of Competing Interest", "Data Availability Statement"]
+            profile.formatting_notes = ["Rigorous numbered sections", "Clear separation of empirical results from discussion & implications"]
+            
         elif "ieee" in pub_lower:
             profile.abstract_style = "Single Paragraph"
             profile.keyword_label = "Index Terms"
-            profile.main_sections = ["I. INTRODUCTION", "II. RELATED WORK", "III. METHODOLOGY", "IV. RESULTS AND ANALYSIS", "V. DISCUSSION", "VI. CONCLUSION"]
+            profile.main_sections = ["I. INTRODUCTION", "II. RELATED WORK", "III. SYSTEM MODEL AND HYPOTHESES", "IV. RESEARCH METHODOLOGY", "V. EXPERIMENTAL RESULTS AND FINDINGS", "VI. DISCUSSION", "VII. CONCLUSION"]
             profile.citation_style = "IEEE Numbered"
             profile.reference_style = "IEEE Numbered"
-            profile.declaration_requirements = ["Acknowledgment"]
-            profile.formatting_notes = ["Use numbered section hierarchy (Roman Numerals)", "Technical, precise, concise tone"]
-            
-        elif "elsevier" in pub_lower or "science direct" in pub_lower:
-            profile.abstract_style = "Unstructured Paragraph + Optional Graphical Abstract"
-            profile.main_sections = ["1. INTRODUCTION", "2. LITERATURE REVIEW", "3. METHODOLOGY", "4. RESULTS", "5. DISCUSSION", "6. CONCLUSION"]
-            profile.citation_style = "APA / Vancouver"
-            profile.reference_style = "APA / Vancouver"
-            profile.declaration_requirements = ["Highlights", "CRediT Authorship Contribution Statement", "Declaration of Competing Interest"]
-            profile.formatting_notes = ["Clear scientific argument", "Results separated from interpretation"]
+            profile.declaration_requirements = ["Acknowledgment", "Conflict of Interest"]
+            profile.formatting_notes = ["Use Roman numeral section hierarchy (I., II., III.)", "Bracketed citations [1], [2] throughout text", "Concise, technical, quantitative tone"]
             
         elif "springer" in pub_lower:
-            profile.abstract_style = "Unstructured Paragraph"
-            profile.main_sections = ["Introduction", "Methodology", "Results", "Discussion", "Conclusion"]
+            profile.abstract_style = "Unstructured Paragraph (150-250 words)"
+            profile.main_sections = ["1 Introduction", "2 Conceptual Background and Hypotheses", "3 Research Design and Methods", "4 Empirical Results", "5 Discussion", "6 Conclusion and Future Research"]
             profile.citation_style = "Springer Basic (Author-Date) or Numbered"
-            profile.reference_style = "Springer Basic"
-            profile.declaration_requirements = ["Declarations", "Funding", "Competing Interests"]
-            profile.formatting_notes = ["Use IMRaD logic where appropriate"]
+            profile.reference_style = "Springer Basic / APA"
+            profile.declaration_requirements = ["Funding Information", "Competing Interests", "Ethical Approval", "Consent to Participate", "Data Availability"]
+            profile.formatting_notes = ["IMRaD section flow", "Exhaustive ethics and declarations subsections"]
             
-        else: # Taylor & Francis or Generic
+        elif "taylor" in pub_lower or "routledge" in pub_lower:
             profile.abstract_style = "Unstructured (up to 200 words)"
-            profile.main_sections = ["Introduction", "Literature Review", "Theoretical Background", "Methodology", "Results", "Discussion", "Conclusion"]
-            profile.citation_style = "APA / Harvard / Chicago"
-            profile.reference_style = "APA / Harvard"
-            profile.declaration_requirements = ["Disclosure Statement", "Data Availability Statement"]
-            profile.formatting_notes = ["Use British English spelling conventions", "Highly objective, precise academic tone"]
+            profile.main_sections = ["1. Introduction", "2. Literature review and conceptual model", "3. Research method", "4. Data analysis and results", "5. Discussion and theoretical contributions", "6. Practical implications", "7. Conclusion"]
+            profile.citation_style = "Harvard / APA (Author-Date)"
+            profile.reference_style = "Harvard / APA"
+            profile.declaration_requirements = ["Disclosure Statement", "Data Availability Statement", "Funding Details"]
+            profile.formatting_notes = ["British English spelling conventions", "Thorough theoretical grounding and managerial takeaways"]
+            
+        elif "igi" in pub_lower:
+            profile.abstract_style = "Unstructured Paragraph"
+            profile.keyword_label = "Keywords"
+            profile.main_sections = ["INTRODUCTION", "BACKGROUND AND RELATED WORK", "CONCEPTUAL MODEL AND HYPOTHESES", "RESEARCH METHODOLOGY", "EMPIRICAL FINDINGS", "SOLUTIONS AND RECOMMENDATIONS", "FUTURE RESEARCH DIRECTIONS", "CONCLUSION"]
+            profile.citation_style = "APA 7th"
+            profile.reference_style = "Compilation of References"
+            profile.declaration_requirements = ["KEY TERMS AND DEFINITIONS (Dictionary Definitions)", "Conflict of Interest Statement", "Funding Acknowledgement"]
+            profile.formatting_notes = ["ALL CAPS section titles", "Includes 7-10 formal dictionary definitions under Key Terms and Definitions"]
+            
+        elif "inderscience" in pub_lower:
+            profile.abstract_style = "Unstructured Paragraph (100-150 words)"
+            profile.keyword_label = "Keywords"
+            profile.main_sections = ["1 Introduction", "2 Literature review and hypothesis formulation", "3 Research methodology and data sample", "4 Empirical findings and statistical analysis", "5 Discussion and managerial takeaways", "6 Conclusions and future scope"]
+            profile.citation_style = "Inderscience Harvard (Author-Date)"
+            profile.reference_style = "Inderscience Harvard"
+            profile.declaration_requirements = ["Biographical Notes", "Conflict of Interest", "Copyright & Permissions Notice"]
+            profile.formatting_notes = ["Compact mathematical notation", "Author biographical notes required"]
+            
+        else: # Emerald or Default
+            profile.abstract_style = "Structured (Emerald Style)"
+            profile.abstract_sections = ["Purpose", "Design/methodology/approach", "Findings", "Research limitations/implications", "Practical implications", "Originality/value"]
+            profile.main_sections = ["Introduction", "Literature Review and Hypotheses Development", "Theoretical Foundation", "Research Methodology", "Findings and Data Analysis", "Discussion", "Theoretical and Managerial Implications", "Conclusion"]
+            profile.citation_style = "Harvard (Emerald)"
+            profile.reference_style = "Harvard (Emerald)"
+            profile.declaration_requirements = ["Data Availability Statement", "Conflict of Interest", "Funding Statement"]
+            profile.formatting_notes = ["Emerald 6-part structured abstract", "Explicit managerial & social implications"]
 
         return profile
 

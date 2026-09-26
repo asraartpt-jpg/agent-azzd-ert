@@ -9,18 +9,45 @@
     <style>
         .chat-container { height: calc(100vh - 180px); }
         .manuscript-container { height: calc(100vh - 80px); }
+        .format-pill.active {
+            background-color: #1e40af !important;
+            color: #ffffff !important;
+            border-color: #1e3a8a !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .format-pill.active i {
+            color: #ffffff !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen overflow-hidden">
 
     <!-- Top Navigation -->
-    <nav class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
-        <h1 class="text-xl font-bold"><i class="fas fa-microscope mr-2"></i> Azzy Research Paper Writer</h1>
+    <nav class="bg-blue-900 text-white px-4 py-2.5 shadow-md flex justify-between items-center">
         <div class="flex items-center space-x-3">
-            <button onclick="startNewProject()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center transition shadow">
-                <i class="fas fa-plus mr-1.5"></i> New Project
+            <h1 class="text-lg font-bold flex items-center"><i class="fas fa-microscope text-blue-300 mr-2"></i> Azzy Research Paper Writer</h1>
+            <span class="text-xs bg-blue-800 text-blue-200 px-2 py-0.5 rounded border border-blue-700">Q1 Academic AI</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <!-- Project Manager Selector -->
+            <div class="flex items-center space-x-2 bg-blue-800/90 px-3 py-1.5 rounded-lg border border-blue-700 shadow-inner">
+                <i class="fas fa-folder-open text-amber-300 text-sm"></i>
+                <span class="font-bold text-blue-200 text-xs uppercase tracking-wider">Project:</span>
+                <select id="project-selector" onchange="switchProject(this.value)" class="bg-blue-950 text-white font-medium border border-blue-500 rounded px-2.5 py-1 text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none cursor-pointer max-w-[220px] truncate">
+                    <option value="default">Default Project</option>
+                </select>
+                <button onclick="deleteCurrentProject()" title="Delete active project" class="text-red-300 hover:text-red-100 p-1 text-xs">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+
+            <!-- New Project Button -->
+            <button onclick="openNewProjectModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-semibold flex items-center transition shadow hover:shadow-md">
+                <i class="fas fa-plus-circle mr-1.5"></i> New Project
             </button>
-            <div class="text-sm bg-blue-800 px-3 py-1 rounded">Session: <span id="session-id-display">New Session</span></div>
+            <div class="text-xs bg-blue-950 px-2.5 py-1.5 rounded border border-blue-700 text-blue-200">
+                Session: <span id="session-id-display" class="font-mono">New Session</span>
+            </div>
         </div>
     </nav>
 
@@ -29,14 +56,14 @@
         <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col">
             <div class="p-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center space-x-2">
                 <div class="flex space-x-2">
-                    <button class="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-emerald-700 flex items-center shadow" onclick="startNewProject()" title="Start a fresh research project">
+                    <button class="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-emerald-700 flex items-center shadow" onclick="openNewProjectModal()" title="Start and name a fresh research project">
                         <i class="fas fa-plus mr-1"></i> New Project
                     </button>
                     <button class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-indigo-700 flex items-center shadow" onclick="document.getElementById('auto-modal').classList.remove('hidden')">
                         <i class="fas fa-magic mr-1"></i> Auto-Generate
                     </button>
                 </div>
-                <select id="agent-selector" class="text-sm border border-gray-300 rounded p-1">
+                <select id="agent-selector" class="text-xs border border-gray-300 rounded p-1.5 bg-white font-medium">
                     <option value="planning">1. Planning Agent</option>
                     <option value="discovery">2. Discovery Agent</option>
                     <option value="verification">3. Verification Agent</option>
@@ -55,7 +82,7 @@
                 <div class="flex flex-col space-y-1">
                     <span class="text-xs text-gray-500 font-bold ml-2">System Orchestrator</span>
                     <div class="bg-blue-50 text-blue-900 p-3 rounded-lg rounded-tl-none text-sm inline-block max-w-[90%] shadow-sm border border-blue-100">
-                        Welcome! Click "Auto-Generate" for a one-shot pipeline, or chat with individual agents below.
+                        Welcome to your research project workspace! Click <strong>"Auto-Generate"</strong> for a complete manuscript, or select publisher formats above the draft.
                     </div>
                 </div>
             </div>
@@ -63,7 +90,7 @@
             <!-- Chat Input -->
             <div class="p-4 border-t border-gray-200 bg-white">
                 <form id="chat-form" class="flex space-x-2">
-                    <input type="text" id="chat-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" placeholder="Message the agent...">
+                    <input type="text" id="chat-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="Message the agent...">
                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
                         <i class="fas fa-paper-plane"></i>
                     </button>
@@ -73,40 +100,84 @@
 
         <!-- Right Panel: Manuscript State -->
         <div class="w-2/3 bg-gray-50 flex flex-col">
-            <div class="p-4 bg-white border-b border-gray-200 flex space-x-4">
-                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('draft')">Manuscript Draft</button>
-                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('sources')">Source Database</button>
-                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('style')">Journal Style Profile</button>
-                <button class="px-4 py-2 bg-purple-100 rounded font-semibold text-purple-800 hover:bg-purple-200 transition" onclick="switchTab('quality')">Quality Dashboard</button>
-                <button class="px-4 py-2 bg-gray-200 rounded font-semibold text-gray-700 hover:bg-gray-300 transition" onclick="switchTab('json')">Raw State (Debug)</button>
+            <div class="p-3 bg-white border-b border-gray-200 flex space-x-2">
+                <button class="px-4 py-1.5 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition shadow-sm" onclick="switchTab('draft')" id="tab-btn-draft">Manuscript Draft</button>
+                <button class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded font-semibold text-sm hover:bg-gray-300 transition" onclick="switchTab('sources')" id="tab-btn-sources">Source Database</button>
+                <button class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded font-semibold text-sm hover:bg-gray-300 transition" onclick="switchTab('style')" id="tab-btn-style">Journal Style Profile</button>
+                <button class="px-4 py-1.5 bg-purple-100 text-purple-800 rounded font-semibold text-sm hover:bg-purple-200 transition" onclick="switchTab('quality')" id="tab-btn-quality">Quality Dashboard</button>
+                <button class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded font-semibold text-sm hover:bg-gray-300 transition" onclick="switchTab('json')" id="tab-btn-json">Raw State</button>
             </div>
             
-            <div class="manuscript-container overflow-y-auto p-8" id="right-panel-content">
-                <div id="tab-quality" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full">
+            <div class="manuscript-container overflow-y-auto p-6" id="right-panel-content">
+                <div id="tab-quality" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full rounded-lg">
                     <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Pipeline Quality Dashboard</h2>
                     <div id="quality-content" class="space-y-6">
                         <p class="text-gray-500 italic">No quality metrics available yet. Generate a paper to view scores.</p>
                     </div>
                 </div>
                 
-                <div id="tab-draft" class="bg-white p-8 shadow-sm border border-gray-200 min-h-full">
-                    <div class="flex justify-between items-center mb-8 border-b pb-4">
-                        <h1 class="text-3xl font-bold" id="doc-title">[Untitled Research Paper]</h1>
-                        <button onclick="document.getElementById('switch-modal').classList.remove('hidden')" class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 transition">
-                            <i class="fas fa-exchange-alt mr-2"></i> Change Journal Style
+                <div id="tab-draft" class="bg-white p-8 shadow-sm border border-gray-200 min-h-full rounded-lg">
+                    
+                    <!-- Publisher Format Type Quick-Switch Bar -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-6 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div class="flex items-center space-x-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                <i class="fas fa-layer-group text-indigo-600"></i>
+                                <span>Publisher Format Style:</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5" id="publisher-format-buttons">
+                                <button onclick="switchPublisherFormat('Wiley')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-blue-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="Wiley" title="Apply Wiley (GBOE / ISJ) format">
+                                    <i class="fas fa-book-open text-blue-600 mr-1"></i> Wiley
+                                </button>
+                                <button onclick="switchPublisherFormat('ScienceDirect')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-emerald-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="ScienceDirect" title="Apply Elsevier / ScienceDirect format">
+                                    <i class="fas fa-file-alt text-emerald-600 mr-1"></i> ScienceDirect
+                                </button>
+                                <button onclick="switchPublisherFormat('IEEE')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-amber-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="IEEE" title="Apply IEEE Transactions format">
+                                    <i class="fas fa-bolt text-amber-500 mr-1"></i> IEEE
+                                </button>
+                                <button onclick="switchPublisherFormat('Springer')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-teal-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="Springer" title="Apply Springer Nature format">
+                                    <i class="fas fa-leaf text-teal-600 mr-1"></i> Springer
+                                </button>
+                                <button onclick="switchPublisherFormat('Taylor & Francis')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-orange-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="Taylor & Francis" title="Apply Taylor & Francis (JCIS) format">
+                                    <i class="fas fa-feather-alt text-orange-600 mr-1"></i> Taylor & Francis
+                                </button>
+                                <button onclick="switchPublisherFormat('Emerald')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-purple-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="Emerald" title="Apply Emerald (VJIKMS / EJIM) format">
+                                    <i class="fas fa-gem text-purple-600 mr-1"></i> Emerald
+                                </button>
+                                <button onclick="switchPublisherFormat('IGI Global')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-rose-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="IGI Global" title="Apply IGI Global format">
+                                    <i class="fas fa-globe text-rose-600 mr-1"></i> IGI Global
+                                </button>
+                                <button onclick="switchPublisherFormat('Inderscience')" class="format-pill px-2.5 py-1 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-cyan-50 text-gray-700 transition flex items-center shadow-xs" data-publisher="Inderscience" title="Apply Inderscience format">
+                                    <i class="fas fa-network-wired text-cyan-600 mr-1"></i> Inderscience
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-6 border-b pb-4">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span id="doc-project-badge" class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-indigo-200">Default Project</span>
+                                <span id="doc-format-badge" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">Emerald Format</span>
+                            </div>
+                            <h1 class="text-2xl font-bold mt-2 text-gray-900" id="doc-title">[Untitled Research Paper]</h1>
+                        </div>
+                        <button onclick="document.getElementById('switch-modal').classList.remove('hidden')" class="bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg shadow hover:bg-indigo-700 transition text-sm font-semibold flex items-center">
+                            <i class="fas fa-sliders-h mr-1.5"></i> Custom Style Settings
                         </button>
                     </div>
+                    
                     <div id="doc-content" class="prose max-w-none text-gray-800 leading-relaxed">
-                        <p class="text-gray-400 italic text-center mt-10">The manuscript draft is currently empty.</p>
+                        <p class="text-gray-400 italic text-center mt-10">The manuscript draft is currently empty. Click "Auto-Generate" or choose a publisher format to start.</p>
                     </div>
                 </div>
                 
-                <div id="tab-style" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full">
+                <div id="tab-style" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full rounded-lg">
                     <div class="flex justify-between items-center mb-6 border-b pb-2">
                         <h2 class="text-2xl font-bold text-gray-800">Active Style Profile</h2>
                         <div class="space-x-2">
                             <input type="file" id="guidelines-upload" accept=".pdf,.txt,.docx" class="hidden">
-                            <button onclick="document.getElementById('guidelines-upload').click()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                            <button onclick="document.getElementById('guidelines-upload').click()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm font-semibold">
                                 <i class="fas fa-upload mr-1"></i> Upload Journal Guidelines
                             </button>
                         </div>
@@ -116,14 +187,14 @@
                     </div>
                 </div>
                 
-                <div id="tab-sources" class="hidden">
+                <div id="tab-sources" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full rounded-lg">
                     <h2 class="text-xl font-bold mb-4 text-gray-800">Verified Source Database</h2>
                     <div id="source-list" class="space-y-4">
                         <p class="text-gray-500 italic">No sources discovered yet.</p>
                     </div>
                 </div>
                 
-                <div id="tab-json" class="hidden">
+                <div id="tab-json" class="hidden bg-white p-8 shadow-sm border border-gray-200 min-h-full rounded-lg">
                     <h2 class="text-xl font-bold mb-4 text-gray-800">State Object</h2>
                     <pre id="state-json" class="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto"></pre>
                 </div>
@@ -131,72 +202,105 @@
         </div>
     </div>
 
+    <!-- Create New Project Modal -->
+    <div id="new-project-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-[520px] max-w-full shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-folder-plus text-emerald-600 mr-2"></i>Create New Research Project
+                </h2>
+                <button onclick="document.getElementById('new-project-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+            </div>
+            <form id="new-project-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Project Name *</label>
+                    <input type="text" id="new-project-name" required placeholder="e.g. Agentic AI Adoption in Financial Tech 2026" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Research Topic / Initial Notes (Optional)</label>
+                    <textarea id="new-project-topic" rows="2" placeholder="e.g. Investigating employee resistance and trust dynamics in intelligent automation..." class="w-full border border-gray-300 p-2 rounded-lg text-sm"></textarea>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+                    <i class="fas fa-info-circle mr-1"></i> Each project maintains its own isolated manuscript drafts, literature sources, uploaded files, and agent chat history.
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t">
+                    <button type="button" onclick="document.getElementById('new-project-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-semibold flex items-center shadow">
+                        <i class="fas fa-check mr-1.5"></i> Create & Launch Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Auto-Generate Modal -->
     <div id="auto-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg p-6 w-[600px] max-w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <h2 class="text-xl font-bold mb-4 sticky top-0 bg-white pb-2 border-b">Automated Paper Generation</h2>
+        <div class="bg-white rounded-xl p-6 w-[620px] max-w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h2 class="text-xl font-bold mb-4 sticky top-0 bg-white pb-2 border-b text-gray-800 flex items-center">
+                <i class="fas fa-magic text-indigo-600 mr-2"></i>Automated Paper Generation
+            </h2>
             <form id="auto-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Research Title *</label>
-                    <input type="text" id="auto-title" required class="w-full border p-2 rounded">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Research Title *</label>
+                    <input type="text" id="auto-title" required class="w-full border border-gray-300 p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Navigating the Paradigm Shift: Empirical Investigation of Agentic AI...">
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Target Publisher *</label>
-                    <select id="auto-publisher" class="w-full p-2 border border-blue-200 rounded">
-                        <option value="Emerald">Emerald</option>
-                        <option value="Elsevier / ScienceDirect">Elsevier / ScienceDirect</option>
-                        <option value="IEEE">IEEE</option>
-                        <option value="Taylor & Francis">Taylor & Francis</option>
-                        <option value="Springer Nature">Springer Nature</option>
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Target Publisher *</label>
+                    <select id="auto-publisher" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                        <option value="Wiley">Wiley (e.g. GBOE, ISJ)</option>
+                        <option value="ScienceDirect">ScienceDirect / Elsevier (e.g. Array, JIK, TIS)</option>
+                        <option value="IEEE">IEEE (e.g. IEEE Access, TEM)</option>
+                        <option value="Springer">Springer Nature (e.g. IS Frontiers)</option>
+                        <option value="Taylor & Francis">Taylor & Francis (e.g. JCIS)</option>
+                        <option value="Emerald" selected>Emerald (e.g. VJIKMS, EJIM)</option>
+                        <option value="IGI Global">IGI Global</option>
+                        <option value="Inderscience">Inderscience</option>
                         <option value="Auto Recommend">Auto Recommend</option>
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Target Journal (Optional)</label>
-                    <input type="text" id="auto-journal" class="w-full p-2 border border-blue-200 rounded" placeholder="Search and Select Journal">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Target Journal (Optional)</label>
+                    <input type="text" id="auto-journal" class="w-full p-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. Global Business and Organizational Excellence">
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Article Type</label>
-                    <select id="auto-type" class="w-full p-2 border border-blue-200 rounded">
-                        <option value="Original Research Article">Original Research Article</option>
-                        <option value="Review Article">Review Article</option>
-                        <option value="Systematic Literature Review">Systematic Literature Review</option>
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Article Type</label>
+                    <select id="auto-type" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                        <option value="Original Research Article">Original Research Article (Empirical)</option>
+                        <option value="Review Article">Review Article / Systematic Literature Review</option>
                         <option value="Conceptual Paper">Conceptual Paper</option>
                         <option value="Methodological Paper">Methodological Paper</option>
-                        <option value="Case Study">Case Study</option>
-                        <option value="Short Communication">Short Communication</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Research Questions (Optional, comma separated)</label>
-                    <input type="text" id="auto-rqs" class="w-full border p-2 rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Research Objectives (Optional, comma separated)</label>
-                    <input type="text" id="auto-objs" class="w-full border p-2 rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Research Hypotheses (Optional, comma separated)</label>
-                    <input type="text" id="auto-hypotheses" class="w-full border p-2 rounded" placeholder="E.g. H1: Perceived agency positively impacts usefulness">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1"><i class="fas fa-tags text-indigo-600 mr-1"></i> Specific Research Keywords (Optional, comma separated)</label>
-                    <input type="text" id="auto-keywords" class="w-full border p-2 rounded" placeholder="E.g. Agentic AI, TAM, UTAUT, Employee Trust, SmartPLS, SEM">
+                    <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fas fa-tags text-indigo-600 mr-1"></i> Specific Research Keywords (Optional, comma separated)</label>
+                    <input type="text" id="auto-keywords" class="w-full border border-gray-300 p-2 rounded-lg text-sm" placeholder="E.g. Agentic AI, TAM, UTAUT, Employee Trust, SmartPLS, SEM">
                     <p class="text-xs text-gray-500 mt-1">The agent will use these exact keywords for literature retrieval and section synthesis.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Research Questions (Optional, comma separated)</label>
+                    <input type="text" id="auto-rqs" class="w-full border border-gray-300 p-2 rounded-lg text-sm" placeholder="RQ1: ..., RQ2: ...">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Research Objectives (Optional, comma separated)</label>
+                    <input type="text" id="auto-objs" class="w-full border border-gray-300 p-2 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Research Hypotheses (Optional, comma separated)</label>
+                    <input type="text" id="auto-hypotheses" class="w-full border border-gray-300 p-2 rounded-lg text-sm" placeholder="E.g. H1: Perceived agency positively impacts employee task performance">
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Preferred Methodology</label>
-                        <select id="auto-methodology" class="w-full p-2 border border-blue-200 rounded">
-                            <option value="Auto Recommend">Auto Recommend</option>
-                            <option value="Quantitative">Quantitative</option>
-                            <option value="Qualitative">Qualitative</option>
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Preferred Methodology</label>
+                        <select id="auto-methodology" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                            <option value="Auto Recommend">Auto Recommend (PLS-SEM / SmartPLS 4)</option>
+                            <option value="Quantitative">Quantitative (PLS-SEM / CB-SEM)</option>
+                            <option value="Qualitative">Qualitative (Thematic / Multi-case)</option>
                             <option value="Mixed Methods">Mixed Methods</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Publication Year Preference</label>
-                        <select id="auto-year" class="w-full p-2 border border-blue-200 rounded">
+                        <label class="block text-gray-700 text-sm font-bold mb-1">Publication Year Preference</label>
+                        <select id="auto-year" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
                             <option value="Last 3 years">Last 3 years</option>
                             <option value="Last 5 years" selected>Last 5 years</option>
                             <option value="Last 10 years">Last 10 years</option>
@@ -204,29 +308,31 @@
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Journal Quality Filter (Scopus/WoS)</label>
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Journal Quality Filter (Scopus/WoS)</label>
                     <div class="flex space-x-4">
-                        <label class="inline-flex items-center"><input type="checkbox" id="q1" value="Q1" checked class="form-checkbox h-5 w-5 text-blue-600"><span class="ml-2">Q1</span></label>
-                        <label class="inline-flex items-center"><input type="checkbox" id="q2" value="Q2" checked class="form-checkbox h-5 w-5 text-blue-600"><span class="ml-2">Q2</span></label>
-                        <label class="inline-flex items-center"><input type="checkbox" id="q3" value="Q3" checked class="form-checkbox h-5 w-5 text-blue-600"><span class="ml-2">Q3</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" id="q1" value="Q1" checked class="form-checkbox h-4 w-4 text-blue-600"><span class="ml-2 text-sm">Q1</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" id="q2" value="Q2" checked class="form-checkbox h-4 w-4 text-blue-600"><span class="ml-2 text-sm">Q2</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" id="q3" value="Q3" checked class="form-checkbox h-4 w-4 text-blue-600"><span class="ml-2 text-sm">Q3</span></label>
                     </div>
                     <p class="text-xs text-red-500 mt-1">Q4 and unverified journals are automatically excluded.</p>
                 </div>
                 
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Upload Reference PDFs (Optional)</label>
-                    <input type="file" id="auto-refs" multiple accept=".pdf" class="w-full border p-2 rounded text-sm">
-                    <p class="text-xs text-gray-500 mt-1">Agent will cite these PDFs. Will also search Semantic Scholar.</p>
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Upload Reference PDFs (Optional)</label>
+                    <input type="file" id="auto-refs" multiple accept=".pdf" class="w-full border border-gray-300 p-2 rounded-lg text-sm">
+                    <p class="text-xs text-gray-500 mt-1">Agent will cite these PDFs alongside verified Q1 Semantic Scholar sources.</p>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Upload Empirical Data (Optional)</label>
-                    <input type="file" id="auto-data" accept=".csv,.txt" class="w-full border p-2 rounded text-sm">
-                    <p class="text-xs text-gray-500 mt-1">If provided, agent will write the Results based on this data.</p>
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Upload Empirical Data (Optional)</label>
+                    <input type="file" id="auto-data" accept=".csv,.txt" class="w-full border border-gray-300 p-2 rounded-lg text-sm">
+                    <p class="text-xs text-gray-500 mt-1">If provided, agent integrates this data directly into Findings & Results tables.</p>
                 </div>
 
                 <div class="flex justify-end space-x-2 mt-6">
-                    <button type="button" onclick="document.getElementById('auto-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Generate</button>
+                    <button type="button" onclick="document.getElementById('auto-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 shadow">
+                        <i class="fas fa-rocket mr-1.5"></i> Generate Manuscript
+                    </button>
                 </div>
             </form>
         </div>
@@ -234,40 +340,43 @@
 
     <!-- Style Switcher Modal -->
     <div id="switch-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg p-6 w-[500px] max-w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <h2 class="text-xl font-bold mb-4">Change Journal Style</h2>
-            <p class="text-sm text-gray-600 mb-4">Restructure this manuscript to fit a new publisher's guidelines.</p>
+        <div class="bg-white rounded-xl p-6 w-[500px] max-w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h2 class="text-xl font-bold mb-2 text-gray-800">Change Journal Style & Format</h2>
+            <p class="text-sm text-gray-600 mb-4">Restructure this manuscript according to target publisher guidelines.</p>
             <form id="switch-form" class="space-y-4">
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">New Target Publisher</label>
-                    <select id="switch-publisher" class="w-full p-2 border border-blue-200 rounded">
-                        <option value="Emerald">Emerald</option>
-                        <option value="Elsevier / ScienceDirect">Elsevier / ScienceDirect</option>
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Target Publisher</label>
+                    <select id="switch-publisher" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                        <option value="Wiley">Wiley</option>
+                        <option value="ScienceDirect">ScienceDirect / Elsevier</option>
                         <option value="IEEE">IEEE</option>
+                        <option value="Springer">Springer Nature</option>
                         <option value="Taylor & Francis">Taylor & Francis</option>
-                        <option value="Springer Nature">Springer Nature</option>
+                        <option value="Emerald">Emerald</option>
+                        <option value="IGI Global">IGI Global</option>
+                        <option value="Inderscience">Inderscience</option>
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">New Target Journal (Optional)</label>
-                    <input type="text" id="switch-journal" class="w-full p-2 border border-blue-200 rounded" placeholder="Search and Select Journal">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Target Journal (Optional)</label>
+                    <input type="text" id="switch-journal" class="w-full p-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. Journal of Knowledge Management">
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Article Type</label>
-                    <select id="switch-type" class="w-full p-2 border border-blue-200 rounded">
+                    <label class="block text-gray-700 text-sm font-bold mb-1">Article Type</label>
+                    <select id="switch-type" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
                         <option value="Original Research Article">Original Research Article</option>
                         <option value="Review Article">Review Article</option>
-                        <option value="Systematic Literature Review">Systematic Literature Review</option>
+                        <option value="Conceptual Paper">Conceptual Paper</option>
                     </select>
                 </div>
                 <div class="flex justify-end space-x-2 mt-6">
-                    <button type="button" onclick="document.getElementById('switch-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded"><i class="fas fa-magic mr-1"></i> Restructure Manuscript</button>
+                    <button type="button" onclick="document.getElementById('switch-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 shadow"><i class="fas fa-magic mr-1"></i> Restructure Manuscript</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
 </body>
 </html>

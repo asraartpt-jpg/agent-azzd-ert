@@ -290,14 +290,24 @@ async def switch_style(request: SwitchStyleRequest):
     state.article_type = request.article_type
     
     try:
-        # Phase 1-4: Generate New Style Blueprint
+        # Generate New Style Blueprint
         style_input = f"{request.target_publisher}|{request.target_journal}|{request.article_type}"
         state = orchestrator.route_request(state, "style", user_input=style_input)
         
-        # Phase 6-7: Restructure Manuscript
-        state = orchestrator.route_request(state, "restructure", user_input=request.target_publisher)
+        # Scaffold Manuscript Draft based on the new Blueprint
+        state.manuscript_draft = {}
+        if state.manuscript_blueprint and "sections" in state.manuscript_blueprint:
+            for sec in state.manuscript_blueprint["sections"]:
+                title = sec["title"]
+                state.manuscript_draft[title] = ""
+        else:
+            state.manuscript_draft["1. Introduction"] = ""
+            
+        # Re-generate sections adhering strictly to new publisher rules
+        state = orchestrator.route_request(state, "writing", user_input=request.target_publisher)
         
-        # Phase 8: Re-run Compliance Report
+        # Format checks & compliance report
+        state = orchestrator.route_request(state, "formatting", user_input=request.target_publisher)
         state = orchestrator.route_request(state, "quality")
         
         save_research_session(state.session_id, state.model_dump())
