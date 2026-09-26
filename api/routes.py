@@ -214,6 +214,7 @@ async def generate_full_paper(request: GeneratePaperRequest):
         state = orchestrator.route_request(state, "style", user_input=style_input)
         
         # Scaffold Manuscript Draft based on Blueprint
+        state.manuscript_draft = {}
         if state.manuscript_blueprint and "sections" in state.manuscript_blueprint:
             for sec in state.manuscript_blueprint["sections"]:
                 title = sec["title"]
