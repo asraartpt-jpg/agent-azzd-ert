@@ -71,10 +71,34 @@ class JournalStyleAgent(BaseAgent):
         )
         
         pub_lower = publisher.lower()
+        standard_10_sections = [
+            "1. Introduction",
+            "2. Theoretical Background",
+            "3. Literature Review",
+            "4. Hypotheses Framework",
+            "5. Methodology and Research Design",
+            "6. Data Analysis and Interpretation",
+            "7. Results and Discussions",
+            "8. Theoretical Contributions",
+            "9. Conclusions",
+            "10. Limitations and Future Research"
+        ]
+
         if "wiley" in pub_lower:
             profile.abstract_style = "Structured / Abstract"
             profile.abstract_sections = ["Background", "Methods", "Results", "Conclusions"]
-            profile.main_sections = ["1 | INTRODUCTION", "2 | THEORETICAL FOUNDATION AND HYPOTHESES", "3 | RESEARCH METHODOLOGY", "4 | EMPIRICAL FINDINGS", "5 | DISCUSSION", "6 | IMPLICATIONS FOR PRACTICE AND THEORY", "7 | CONCLUSION"]
+            profile.main_sections = [
+                "1 | INTRODUCTION",
+                "2 | THEORETICAL BACKGROUND",
+                "3 | LITERATURE REVIEW",
+                "4 | HYPOTHESES FRAMEWORK",
+                "5 | METHODOLOGY AND RESEARCH DESIGN",
+                "6 | DATA ANALYSIS AND INTERPRETATION",
+                "7 | RESULTS AND DISCUSSIONS",
+                "8 | THEORETICAL CONTRIBUTIONS",
+                "9 | CONCLUSIONS",
+                "10 | LIMITATIONS AND FUTURE RESEARCH"
+            ]
             profile.citation_style = "APA 7th / Harvard"
             profile.reference_style = "APA 7th"
             profile.declaration_requirements = ["CRediT Authorship Contribution Statement", "Conflict of Interest Statement", "Data Availability Statement", "Funding Statement"]
@@ -82,7 +106,7 @@ class JournalStyleAgent(BaseAgent):
             
         elif "sciencedirect" in pub_lower or "elsevier" in pub_lower:
             profile.abstract_style = "Unstructured Paragraph + Optional Graphical Abstract"
-            profile.main_sections = ["1. Introduction", "2. Theoretical background and hypotheses", "3. Research methodology", "4. Empirical findings and analysis", "5. Discussion", "6. Conclusion and policy implications"]
+            profile.main_sections = standard_10_sections
             profile.citation_style = "APA / Vancouver"
             profile.reference_style = "APA 7th"
             profile.declaration_requirements = ["Highlights (3-5 Bullet Points)", "CRediT Authorship Contribution Statement", "Declaration of Competing Interest", "Data Availability Statement"]
@@ -91,7 +115,18 @@ class JournalStyleAgent(BaseAgent):
         elif "ieee" in pub_lower:
             profile.abstract_style = "Single Paragraph"
             profile.keyword_label = "Index Terms"
-            profile.main_sections = ["I. INTRODUCTION", "II. RELATED WORK", "III. SYSTEM MODEL AND HYPOTHESES", "IV. RESEARCH METHODOLOGY", "V. EXPERIMENTAL RESULTS AND FINDINGS", "VI. DISCUSSION", "VII. CONCLUSION"]
+            profile.main_sections = [
+                "I. INTRODUCTION",
+                "II. THEORETICAL BACKGROUND",
+                "III. LITERATURE REVIEW",
+                "IV. HYPOTHESES FRAMEWORK",
+                "V. METHODOLOGY AND RESEARCH DESIGN",
+                "VI. DATA ANALYSIS AND INTERPRETATION",
+                "VII. RESULTS AND DISCUSSIONS",
+                "VIII. THEORETICAL CONTRIBUTIONS",
+                "IX. CONCLUSIONS",
+                "X. LIMITATIONS AND FUTURE RESEARCH"
+            ]
             profile.citation_style = "IEEE Numbered"
             profile.reference_style = "IEEE Numbered"
             profile.declaration_requirements = ["Acknowledgment", "Conflict of Interest"]
@@ -99,7 +134,7 @@ class JournalStyleAgent(BaseAgent):
             
         elif "springer" in pub_lower:
             profile.abstract_style = "Unstructured Paragraph (150-250 words)"
-            profile.main_sections = ["1 Introduction", "2 Conceptual Background and Hypotheses", "3 Research Design and Methods", "4 Empirical Results", "5 Discussion", "6 Conclusion and Future Research"]
+            profile.main_sections = standard_10_sections
             profile.citation_style = "Springer Basic (Author-Date) or Numbered"
             profile.reference_style = "Springer Basic / APA"
             profile.declaration_requirements = ["Funding Information", "Competing Interests", "Ethical Approval", "Consent to Participate", "Data Availability"]
@@ -107,7 +142,7 @@ class JournalStyleAgent(BaseAgent):
             
         elif "taylor" in pub_lower or "routledge" in pub_lower:
             profile.abstract_style = "Unstructured (up to 200 words)"
-            profile.main_sections = ["1. Introduction", "2. Literature review and conceptual model", "3. Research method", "4. Data analysis and results", "5. Discussion and theoretical contributions", "6. Practical implications", "7. Conclusion"]
+            profile.main_sections = standard_10_sections
             profile.citation_style = "Harvard / APA (Author-Date)"
             profile.reference_style = "Harvard / APA"
             profile.declaration_requirements = ["Disclosure Statement", "Data Availability Statement", "Funding Details"]
@@ -116,7 +151,18 @@ class JournalStyleAgent(BaseAgent):
         elif "igi" in pub_lower:
             profile.abstract_style = "Unstructured Paragraph"
             profile.keyword_label = "Keywords"
-            profile.main_sections = ["INTRODUCTION", "BACKGROUND AND RELATED WORK", "CONCEPTUAL MODEL AND HYPOTHESES", "RESEARCH METHODOLOGY", "EMPIRICAL FINDINGS", "SOLUTIONS AND RECOMMENDATIONS", "FUTURE RESEARCH DIRECTIONS", "CONCLUSION"]
+            profile.main_sections = [
+                "1. INTRODUCTION",
+                "2. THEORETICAL BACKGROUND",
+                "3. LITERATURE REVIEW",
+                "4. HYPOTHESES FRAMEWORK",
+                "5. METHODOLOGY AND RESEARCH DESIGN",
+                "6. DATA ANALYSIS AND INTERPRETATION",
+                "7. RESULTS AND DISCUSSIONS",
+                "8. THEORETICAL CONTRIBUTIONS",
+                "9. CONCLUSIONS",
+                "10. LIMITATIONS AND FUTURE RESEARCH"
+            ]
             profile.citation_style = "APA 7th"
             profile.reference_style = "Compilation of References"
             profile.declaration_requirements = ["KEY TERMS AND DEFINITIONS (Dictionary Definitions)", "Conflict of Interest Statement", "Funding Acknowledgement"]
@@ -125,7 +171,7 @@ class JournalStyleAgent(BaseAgent):
         elif "inderscience" in pub_lower:
             profile.abstract_style = "Unstructured Paragraph (100-150 words)"
             profile.keyword_label = "Keywords"
-            profile.main_sections = ["1 Introduction", "2 Literature review and hypothesis formulation", "3 Research methodology and data sample", "4 Empirical findings and statistical analysis", "5 Discussion and managerial takeaways", "6 Conclusions and future scope"]
+            profile.main_sections = standard_10_sections
             profile.citation_style = "Inderscience Harvard (Author-Date)"
             profile.reference_style = "Inderscience Harvard"
             profile.declaration_requirements = ["Biographical Notes", "Conflict of Interest", "Copyright & Permissions Notice"]
@@ -134,7 +180,7 @@ class JournalStyleAgent(BaseAgent):
         else: # Emerald or Default
             profile.abstract_style = "Structured (Emerald Style)"
             profile.abstract_sections = ["Purpose", "Design/methodology/approach", "Findings", "Research limitations/implications", "Practical implications", "Originality/value"]
-            profile.main_sections = ["Introduction", "Literature Review and Hypotheses Development", "Theoretical Foundation", "Research Methodology", "Findings and Data Analysis", "Discussion", "Theoretical and Managerial Implications", "Conclusion"]
+            profile.main_sections = standard_10_sections
             profile.citation_style = "Harvard (Emerald)"
             profile.reference_style = "Harvard (Emerald)"
             profile.declaration_requirements = ["Data Availability Statement", "Conflict of Interest", "Funding Statement"]
