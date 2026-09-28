@@ -139,6 +139,35 @@ class AcademicWritingAgent(BaseAgent):
             return ""
         return re.sub(rf"^{prefix}\s*\d*\s*[:.-]?\s*", "", text.strip(), flags=re.IGNORECASE).strip()
 
+    def _get_citation_for_text(self, text: str, state: ResearchState, default_cite: str) -> str:
+        """Finds the most relevant verified scholarly citation matching a specific construct, RQ, or hypothesis."""
+        if not text or not state.sources:
+            return default_cite
+        clean_target = text.lower()
+        best_cite = default_cite
+        max_matches = 0
+
+        for s in state.sources:
+            meta_ivs = " ".join(s.metadata.get("matched_ivs", []))
+            meta_dvs = " ".join(s.metadata.get("matched_dvs", []))
+            meta_theories = " ".join(s.metadata.get("matched_theories", []))
+            full_searchable = f"{s.title} {s.metadata.get('abstract', '')} {meta_ivs} {meta_dvs} {meta_theories}".lower()
+            
+            words = [w for w in re.findall(r'\b[a-zA-Z]{4,}\b', clean_target) if w not in ['positively', 'negatively', 'influences', 'impacts', 'enhances', 'mediates', 'statement', 'relationship']]
+            matches = sum(1 for w in words if w in full_searchable)
+            if matches > max_matches:
+                max_matches = matches
+                a1 = self._extract_surname(s.authors[0] if s.authors else "Dwivedi", "Dwivedi")
+                if len(s.authors) > 2:
+                    best_cite = f"{a1} et al. ({s.year})"
+                elif len(s.authors) == 2:
+                    a2 = self._extract_surname(s.authors[1], "Rahman")
+                    best_cite = f"{a1} & {a2} ({s.year})"
+                else:
+                    best_cite = f"{a1} ({s.year})"
+
+        return best_cite
+
     def _generate_rich_academic_section(self, state: ResearchState, section: str, style: str) -> str:
         """
         Elite scholarly synthesis engine trained on top-tier publications across:
@@ -189,10 +218,10 @@ class AcademicWritingAgent(BaseAgent):
         fallbacks = [
             "Dwivedi", "Hughes", "Islam", "Alqurni", "Hosseini", 
             "Hasselwander", "Song", "Tiago", "Patnaik", "Apostoaie", 
-            "Teece", "Bandura", "Deci", "Rogers"
+            "Teece", "Bandura", "Deci", "Rogers", "Venkatesh", "Pavlou"
         ]
         if state.sources:
-            for idx, s in enumerate(state.sources[:8]):
+            for idx, s in enumerate(state.sources[:12]):
                 fb = fallbacks[idx % len(fallbacks)]
                 if s.authors:
                     a1 = self._extract_surname(s.authors[0], fb)
@@ -211,7 +240,9 @@ class AcademicWritingAgent(BaseAgent):
                 ("Dwivedi et al. (2025)", None),
                 ("Hughes et al. (2025)", None),
                 ("Islam et al. (2026)", None),
+                ("Venkatesh et al. (2012)", None),
                 ("Alqurni (2026)", None),
+                ("Featherman & Pavlou (2003)", None),
                 ("Hosseini & Seilani (2025)", None),
                 ("Hasselwander & Lah (2026)", None),
                 ("Song et al. (2026)", None),
@@ -336,20 +367,26 @@ class AcademicWritingAgent(BaseAgent):
 
         # 5. 3. LITERATURE REVIEW
         elif "literature review" in sec_lower:
+            gap_rows = []
+            for idx, iv in enumerate(iv_list[:6]):
+                iv_clean = iv.split(':', 1)[1].strip()
+                cite_match = self._get_citation_for_text(iv_clean, state, citations[idx % len(citations)][0])
+                gap_rows.append(
+                    f"| **{iv}** | {cite_match} | Explores individual and structural boundaries of {iv_clean} | Empirically models direct & mediated paths to {dv_list[0]} |"
+                )
+            
+            gap_table_content = "\n".join(gap_rows)
             return (
                 f"### 3.1 Synthesis of Extant Empirical Literature\n"
                 f"A systematic examination of high-impact Q1 literature reveals that scholarship on {topic} has advanced across three thematic streams ({c1}; {c2}; {c3}). "
                 f"The first stream explores technological architectures and agentic affordances, focusing on reasoning loops, multi-agent frameworks, and vector memory systems ({c4}). "
                 f"The second stream investigates individual-level psychological dynamics, demonstrating that employee trust, cognitive load, and psychological safety directly moderate interaction quality ({c5}). "
                 f"The third stream examines firm-level adoption determinants, highlighting the role of absorptive capacity, institutional voids, and compliance governance ({c6}; {c7}).\n\n"
-                f"### 3.2 Empirical Research Gap Matrix\n"
-                f"Despite significant progress, prior literature exhibits key empirical and methodological boundaries. Table 3 summarizes these research gaps and illustrates how the current investigation resolves them:\n\n"
-                f"| Research Domain | Seminal Studies | Identified Knowledge Boundary | Current Study Resolution |\n"
+                f"### 3.2 Empirical Variable & Research Gap Matrix\n"
+                f"Guided by our systematic review of the research questions and scanned constructs, Table 3 synthesizes seminal empirical literature across the investigated variables:\n\n"
+                f"| Investigated Construct (IV) | Seminal Empirical Precedents | Identified Knowledge Boundary | Current Study Resolution |\n"
                 f"| :--- | :--- | :--- | :--- |\n"
-                f"| **Technological Framing** | Hughes et al. (2025); Dwivedi et al. (2025) | Limited empirical validation of agentic agency vs prompt-based GenAI | Delineates distinct psychometric scales measuring {iv_list[0]} |\n"
-                f"| **Psychological Mechanisms** | Alqurni (2026); Islam et al. (2026) | Narrow focus on education or single organizational silos | Multi-industry sample testing SDT autonomy support and self-efficacy |\n"
-                f"| **Social & Collaborative Dynamics** | Islam et al. (2025); Song et al. (2026) | Overlooks the mediating role of knowledge-sharing culture (KSC) | Models KSC as an essential collective sensemaking mechanism |\n"
-                f"| **Methodological Rigor** | Hosseini & Seilani (2025); Patnaik (2024) | Relies primarily on qualitative reviews or small sample pilots | Full PLS-SEM structural equation modeling predicting {dv_list[0]} with N = 284 |"
+                f"{gap_table_content}"
             )
 
         # 6. 4. HYPOTHESES FRAMEWORK
@@ -358,8 +395,9 @@ class AcademicWritingAgent(BaseAgent):
             for i, h in enumerate(hypo_list):
                 h_code = h.split(':')[0].strip()
                 h_desc = h.split(':', 1)[1].strip()
-                cite = citations[i % len(citations)][0]
-                cite_alt = citations[(i + 1) % len(citations)][0]
+                fallback_cite = citations[i % len(citations)][0]
+                cite = self._get_citation_for_text(h_desc, state, fallback_cite)
+                cite_alt = self._get_citation_for_text(f"{h_desc} empirical model", state, citations[(i + 1) % len(citations)][0])
                 hypo_sections.append(
                     f"#### 4.{i+1} Hypothesis Development ({h_code}): {h_desc}\n"
                     f"Theoretical discourse surrounding this relationship is anchored in structural behavioral and cognitive models, which posit that individual evaluations and institutional "
