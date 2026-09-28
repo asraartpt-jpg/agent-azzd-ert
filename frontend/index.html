@@ -77,7 +77,7 @@
         <!-- PANEL 2: Agent Chat & Orchestration -->
         <div class="w-72 lg:w-80 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
             <div class="p-2.5 bg-gray-100 border-b border-gray-200 flex justify-between items-center space-x-2">
-                <button class="bg-indigo-600 text-white px-2.5 py-1.5 rounded text-xs font-semibold hover:bg-indigo-700 flex items-center shadow" onclick="document.getElementById('auto-modal').classList.remove('hidden')">
+                <button class="bg-indigo-600 text-white px-2.5 py-1.5 rounded text-xs font-semibold hover:bg-indigo-700 flex items-center shadow" onclick="openAutoModal()">
                     <i class="fas fa-magic mr-1"></i> Auto-Generate
                 </button>
                 <select id="agent-selector" class="text-xs border border-gray-300 rounded p-1 bg-white font-medium flex-1 truncate">
@@ -298,29 +298,57 @@
                     <input type="text" id="auto-keywords" class="w-full border border-gray-300 p-2 rounded-lg text-xs" placeholder="E.g. Agentic AI, TAM, UTAUT, Employee Trust, SmartPLS, SEM">
                     <p class="text-[11px] text-gray-500 mt-1">The agent will use these exact keywords for literature retrieval and section synthesis.</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/70 p-3 rounded-xl border border-slate-200">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-cube text-indigo-600 mr-1"></i> Independent Variables (IV1, IV2...)</label>
-                        <textarea id="auto-ivs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="IV1: Perceived AI Agency&#10;IV2: Perceived Ease of Use&#10;IV3: Autonomy Support"></textarea>
-                        <p class="text-[10px] text-gray-500 mt-0.5">Separate with newlines or commas</p>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-bold text-gray-700"><i class="fas fa-cube text-indigo-600 mr-1"></i> Independent Variables (IVs)</label>
+                            <button type="button" onclick="addDynamicItem('iv')" class="text-[11px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold px-2 py-0.5 rounded border border-indigo-200 transition flex items-center shadow-2xs">
+                                <i class="fas fa-plus mr-1 text-[9px]"></i> Add IV
+                            </button>
+                        </div>
+                        <div id="iv-list-container" class="space-y-1.5"></div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-chart-line text-purple-600 mr-1"></i> Dependent Variables (DV1, DV2...)</label>
-                        <textarea id="auto-dvs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="DV1: Intention to Adopt&#10;DV2: Employee Task Performance&#10;DV3: Strategic Agility"></textarea>
-                        <p class="text-[10px] text-gray-500 mt-0.5">Separate with newlines or commas</p>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-bold text-gray-700"><i class="fas fa-chart-line text-purple-600 mr-1"></i> Dependent Variables (DVs)</label>
+                            <button type="button" onclick="addDynamicItem('dv')" class="text-[11px] bg-purple-50 text-purple-700 hover:bg-purple-100 font-semibold px-2 py-0.5 rounded border border-purple-200 transition flex items-center shadow-2xs">
+                                <i class="fas fa-plus mr-1 text-[9px]"></i> Add DV
+                            </button>
+                        </div>
+                        <div id="dv-list-container" class="space-y-1.5"></div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-question-circle text-blue-600 mr-1"></i> Research Questions (RQ1, RQ2...)</label>
-                    <textarea id="auto-rqs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="RQ1: What structural determinants govern agentic AI adoption?&#10;RQ2: How does autonomy support mediate task performance?"></textarea>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-bullseye text-emerald-600 mr-1"></i> Research Objectives (RO1, RO2...)</label>
-                    <textarea id="auto-objs" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="RO1: To evaluate the impact of perceived agency on usefulness.&#10;RO2: To analyze mediation mechanisms in organizational workflows."></textarea>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fas fa-lightbulb text-amber-500 mr-1"></i> Research Hypotheses (H1, H2, H3...)</label>
-                    <textarea id="auto-hypotheses" rows="2" class="w-full border border-gray-300 p-2 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="H1: Perceived AI agency positively impacts perceived usefulness.&#10;H2: Autonomy support positively impacts employee task performance."></textarea>
+
+                <div class="bg-blue-50/40 p-3 rounded-xl border border-blue-100 space-y-3">
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-bold text-gray-700"><i class="fas fa-question-circle text-blue-600 mr-1"></i> Research Questions (RQs)</label>
+                            <button type="button" onclick="addDynamicItem('rq')" class="text-[11px] bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold px-2 py-0.5 rounded border border-blue-200 transition flex items-center shadow-2xs">
+                                <i class="fas fa-plus mr-1 text-[9px]"></i> Add RQ
+                            </button>
+                        </div>
+                        <div id="rq-list-container" class="space-y-1.5"></div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-bold text-gray-700"><i class="fas fa-bullseye text-emerald-600 mr-1"></i> Research Objectives (ROs)</label>
+                            <button type="button" onclick="addDynamicItem('ro')" class="text-[11px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold px-2 py-0.5 rounded border border-emerald-200 transition flex items-center shadow-2xs">
+                                <i class="fas fa-plus mr-1 text-[9px]"></i> Add RO
+                            </button>
+                        </div>
+                        <div id="ro-list-container" class="space-y-1.5"></div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-bold text-gray-700"><i class="fas fa-lightbulb text-amber-500 mr-1"></i> Research Hypotheses (Hypotheses Framework)</label>
+                            <button type="button" onclick="addDynamicItem('hypo')" class="text-[11px] bg-amber-50 text-amber-800 hover:bg-amber-100 font-semibold px-2 py-0.5 rounded border border-amber-200 transition flex items-center shadow-2xs">
+                                <i class="fas fa-plus mr-1 text-[9px]"></i> Add Hypothesis
+                            </button>
+                        </div>
+                        <div id="hypo-list-container" class="space-y-1.5"></div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
@@ -418,6 +446,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>

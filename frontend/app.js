@@ -9,6 +9,7 @@ const STORAGE_KEY = "ai_research_projects_v3";
 // Initialize Project Manager on load
 document.addEventListener('DOMContentLoaded', () => {
     initProjectManager();
+    initDynamicInputs();
     
     // Close modals on Escape key or backdrop click
     document.addEventListener('keydown', (e) => {
@@ -180,9 +181,8 @@ function createNewProject(name, topic = "") {
         if (autoTitle) autoTitle.value = topic;
     }
     
-    // Automatically open Auto-Generate Modal
-    const autoModal = document.getElementById('auto-modal');
-    if (autoModal) autoModal.classList.remove('hidden');
+    // Automatically open Auto-Generate Modal with initialized inputs
+    openAutoModal();
 }
 
 function switchProject(projectId) {
@@ -585,18 +585,132 @@ document.getElementById('guidelines-upload').addEventListener('change', async (e
     }
 });
 
-// Helper to parse and serialize list items with standardized prefixes (e.g., RQ1:, RO1:, H1:, IV1:, DV1:)
-function parseSerialList(rawText, prefix) {
-    if (!rawText || !rawText.trim()) return [];
-    let items = rawText.includes('\n') 
-        ? rawText.split('\n') 
-        : rawText.split(/[,;]/);
-    
-    return items.map(x => x.trim()).filter(Boolean).map((item, idx) => {
-        const regex = new RegExp(`^${prefix}\\s*\\d*\\s*[:.-]?\\s*`, 'i');
-        const cleanContent = item.replace(regex, '').trim();
-        return `${prefix}${idx + 1}: ${cleanContent || item}`;
+// Dynamic Items Configuration and Handler (IVs, DVs, RQs, ROs, Hypotheses)
+const dynamicConfig = {
+    iv: {
+        prefix: 'IV',
+        containerId: 'iv-list-container',
+        badgeClass: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+        ringClass: 'focus:ring-indigo-500',
+        placeholder: 'e.g. Perceived AI Agency',
+        defaults: ['Perceived AI Agency', 'Perceived Ease of Use']
+    },
+    dv: {
+        prefix: 'DV',
+        containerId: 'dv-list-container',
+        badgeClass: 'bg-purple-100 text-purple-800 border-purple-200',
+        ringClass: 'focus:ring-purple-500',
+        placeholder: 'e.g. Intention to Adopt',
+        defaults: ['Intention to Adopt', 'Employee Task Performance']
+    },
+    rq: {
+        prefix: 'RQ',
+        containerId: 'rq-list-container',
+        badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
+        ringClass: 'focus:ring-blue-500',
+        placeholder: 'e.g. What structural determinants govern agentic AI adoption?',
+        defaults: ['What structural determinants govern agentic AI adoption?', 'How does autonomy support mediate task performance?']
+    },
+    ro: {
+        prefix: 'RO',
+        containerId: 'ro-list-container',
+        badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        ringClass: 'focus:ring-emerald-500',
+        placeholder: 'e.g. To evaluate the impact of perceived agency on usefulness.',
+        defaults: ['To evaluate the impact of perceived agency on usefulness.', 'To analyze mediation mechanisms in organizational workflows.']
+    },
+    hypo: {
+        prefix: 'H',
+        containerId: 'hypo-list-container',
+        badgeClass: 'bg-amber-100 text-amber-800 border-amber-200',
+        ringClass: 'focus:ring-amber-500',
+        placeholder: 'e.g. Perceived AI agency positively impacts perceived usefulness.',
+        defaults: ['Perceived AI agency positively impacts perceived usefulness.', 'Autonomy support positively impacts employee task performance.', 'Knowledge-sharing culture positively mediates the adoption process.']
+    }
+};
+
+function openAutoModal() {
+    initDynamicInputs();
+    const modal = document.getElementById('auto-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function addDynamicItem(type, value = "") {
+    const config = dynamicConfig[type];
+    if (!config) return;
+    const container = document.getElementById(config.containerId);
+    if (!container) return;
+
+    const currentCount = container.children.length;
+    const index = currentCount + 1;
+
+    // Clean any prefix user might have passed
+    const cleanValue = typeof value === 'string' ? value.replace(new RegExp(`^${config.prefix}\\s*\\d*\\s*[:.-]?\\s*`, 'i'), '').trim() : '';
+
+    const row = document.createElement('div');
+    row.className = 'flex items-center space-x-2 dynamic-row';
+    row.innerHTML = `
+        <span class="dynamic-badge text-[11px] font-bold px-2 py-1.5 rounded border min-w-[44px] text-center shrink-0 ${config.badgeClass}">${config.prefix}${index}</span>
+        <input type="text" value="${cleanValue}" placeholder="${config.placeholder}" class="dynamic-input flex-1 border border-gray-300 p-1.5 rounded-lg text-xs focus:ring-2 ${config.ringClass} focus:outline-none">
+        <button type="button" onclick="removeDynamicItem(this, '${type}')" class="text-gray-400 hover:text-red-500 p-1.5 rounded hover:bg-red-50 text-xs transition shrink-0" title="Remove item">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    `;
+    container.appendChild(row);
+}
+
+function removeDynamicItem(btn, type) {
+    const row = btn.closest('.dynamic-row');
+    if (row) {
+        const container = row.parentElement;
+        row.remove();
+        if (container.children.length === 0) {
+            addDynamicItem(type, "");
+        } else {
+            reindexDynamicItems(type);
+        }
+    }
+}
+
+function reindexDynamicItems(type) {
+    const config = dynamicConfig[type];
+    if (!config) return;
+    const container = document.getElementById(config.containerId);
+    if (!container) return;
+
+    const rows = container.querySelectorAll('.dynamic-row');
+    rows.forEach((row, idx) => {
+        const badge = row.querySelector('.dynamic-badge');
+        if (badge) badge.textContent = `${config.prefix}${idx + 1}`;
     });
+}
+
+function initDynamicInputs() {
+    Object.keys(dynamicConfig).forEach(type => {
+        const config = dynamicConfig[type];
+        const container = document.getElementById(config.containerId);
+        if (container && container.children.length === 0) {
+            config.defaults.forEach(val => addDynamicItem(type, val));
+        }
+    });
+}
+
+function getDynamicListValues(type) {
+    const config = dynamicConfig[type];
+    if (!config) return [];
+    const container = document.getElementById(config.containerId);
+    if (!container) return [];
+
+    const inputs = container.querySelectorAll('.dynamic-input');
+    const results = [];
+    inputs.forEach((input, idx) => {
+        const val = input.value.trim();
+        if (val) {
+            const cleanVal = val.replace(new RegExp(`^${config.prefix}\\s*\\d*\\s*[:.-]?\\s*`, 'i'), '').trim();
+            results.push(`${config.prefix}${idx + 1}: ${cleanVal || val}`);
+        }
+    });
+    return results;
 }
 
 // Handle Auto-Generate Submit
@@ -612,20 +726,11 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
     const kwInput = document.getElementById('auto-keywords');
     const keywords = kwInput && kwInput.value ? kwInput.value.split(',').map(k => k.trim()).filter(Boolean) : [];
     
-    const ivsInput = document.getElementById('auto-ivs');
-    const ivs = ivsInput ? parseSerialList(ivsInput.value, 'IV') : [];
-    
-    const dvsInput = document.getElementById('auto-dvs');
-    const dvs = dvsInput ? parseSerialList(dvsInput.value, 'DV') : [];
-    
-    const rqsInput = document.getElementById('auto-rqs');
-    const rqs = rqsInput ? parseSerialList(rqsInput.value, 'RQ') : [];
-    
-    const objsInput = document.getElementById('auto-objs');
-    const objs = objsInput ? parseSerialList(objsInput.value, 'RO') : [];
-    
-    const hyposInput = document.getElementById('auto-hypotheses');
-    const hypos = hyposInput ? parseSerialList(hyposInput.value, 'H') : [];
+    const ivs = getDynamicListValues('iv');
+    const dvs = getDynamicListValues('dv');
+    const rqs = getDynamicListValues('rq');
+    const objs = getDynamicListValues('ro');
+    const hypos = getDynamicListValues('hypo');
     
     const methodology = document.getElementById('auto-methodology').value;
     const yearPref = document.getElementById('auto-year').value;
@@ -694,6 +799,7 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
             publication_year_preference: yearPref,
             journal_quality_filter: qFilters
         };
+
 
         const response = await fetch('/api/v1/generate_paper', {
             method: 'POST',
