@@ -340,14 +340,22 @@
                         <div id="ro-list-container" class="space-y-1.5"></div>
                     </div>
 
-                    <div>
-                        <div class="flex justify-between items-center mb-1.5">
-                            <label class="block text-xs font-bold text-gray-700"><i class="fas fa-lightbulb text-amber-500 mr-1"></i> Research Hypotheses (Hypotheses Framework)</label>
-                            <button type="button" onclick="addDynamicItem('hypo')" class="text-[11px] bg-amber-50 text-amber-800 hover:bg-amber-100 font-semibold px-2 py-0.5 rounded border border-amber-200 transition flex items-center shadow-2xs">
-                                <i class="fas fa-plus mr-1 text-[9px]"></i> Add Hypothesis
-                            </button>
+                    <div class="bg-amber-50/50 p-2.5 rounded-lg border border-amber-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-800"><i class="fas fa-project-diagram text-amber-600 mr-1"></i> Research Hypotheses (IV &rarr; DV Framework)</label>
+                                <p class="text-[10px] text-gray-500">Formulate structural path hypotheses based on IV &amp; DV relationships</p>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <button type="button" onclick="autoGenerateHypothesesFromVariables()" class="text-[11px] bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2 py-1 rounded shadow transition flex items-center" title="Automatically generate hypotheses linking all IVs to DVs">
+                                    <i class="fas fa-bolt mr-1 text-[9px]"></i> Auto-Build from IVs &amp; DVs
+                                </button>
+                                <button type="button" onclick="addDynamicItem('hypo')" class="text-[11px] bg-white hover:bg-amber-100 text-amber-900 font-semibold px-2 py-1 rounded border border-amber-300 shadow-2xs transition flex items-center">
+                                    <i class="fas fa-plus mr-1 text-[9px]"></i> Add Hypothesis
+                                </button>
+                            </div>
                         </div>
-                        <div id="hypo-list-container" class="space-y-1.5"></div>
+                        <div id="hypo-list-container" class="space-y-2"></div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -446,6 +454,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
 </body>
 </html>

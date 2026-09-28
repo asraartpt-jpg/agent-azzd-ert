@@ -635,7 +635,59 @@ function openAutoModal() {
     if (modal) modal.classList.remove('hidden');
 }
 
-function addDynamicItem(type, value = "") {
+function getRawVariables(type) {
+    const config = dynamicConfig[type];
+    if (!config) return [];
+    const container = document.getElementById(config.containerId);
+    if (!container) return [];
+
+    const inputs = container.querySelectorAll('.dynamic-input');
+    const items = [];
+    inputs.forEach((input, idx) => {
+        const val = input.value.trim();
+        const cleanVal = val.replace(new RegExp(`^${config.prefix}\\s*\\d*\\s*[:.-]?\\s*`, 'i'), '').trim();
+        if (cleanVal) {
+            items.push({
+                code: `${config.prefix}${idx + 1}`,
+                name: cleanVal,
+                full: `${config.prefix}${idx + 1}: ${cleanVal}`
+            });
+        }
+    });
+    return items;
+}
+
+function refreshHypothesisDropdowns() {
+    const ivs = getRawVariables('iv');
+    const dvs = getRawVariables('dv');
+    const container = document.getElementById('hypo-list-container');
+    if (!container) return;
+
+    const cards = container.querySelectorAll('.hypo-card');
+    cards.forEach(card => {
+        const ivSel = card.querySelector('.hypo-iv-select');
+        const dvSel = card.querySelector('.hypo-dv-select');
+        if (ivSel) {
+            const curVal = ivSel.value;
+            ivSel.innerHTML = ivs.length > 0 
+                ? ivs.map(v => `<option value="${v.name}" ${curVal === v.name ? 'selected' : ''}>${v.code}: ${v.name}</option>`).join('')
+                : '<option value="">(Enter IVs above)</option>';
+        }
+        if (dvSel) {
+            const curVal = dvSel.value;
+            dvSel.innerHTML = dvs.length > 0 
+                ? dvs.map(v => `<option value="${v.name}" ${curVal === v.name ? 'selected' : ''}>${v.code}: ${v.name}</option>`).join('')
+                : '<option value="">(Enter DVs above)</option>';
+        }
+    });
+}
+
+function addDynamicItem(type, value = "", selectedIv = "", rel = "positively influences", selectedDv = "") {
+    if (type === 'hypo') {
+        addHypothesisItem(value, selectedIv, rel, selectedDv);
+        return;
+    }
+
     const config = dynamicConfig[type];
     if (!config) return;
     const container = document.getElementById(config.containerId);
@@ -651,12 +703,123 @@ function addDynamicItem(type, value = "") {
     row.className = 'flex items-center space-x-2 dynamic-row';
     row.innerHTML = `
         <span class="dynamic-badge text-[11px] font-bold px-2 py-1.5 rounded border min-w-[44px] text-center shrink-0 ${config.badgeClass}">${config.prefix}${index}</span>
-        <input type="text" value="${cleanValue}" placeholder="${config.placeholder}" class="dynamic-input flex-1 border border-gray-300 p-1.5 rounded-lg text-xs focus:ring-2 ${config.ringClass} focus:outline-none">
+        <input type="text" value="${cleanValue}" placeholder="${config.placeholder}" class="dynamic-input flex-1 border border-gray-300 p-1.5 rounded-lg text-xs focus:ring-2 ${config.ringClass} focus:outline-none" oninput="if('${type}' === 'iv' || '${type}' === 'dv') refreshHypothesisDropdowns()">
         <button type="button" onclick="removeDynamicItem(this, '${type}')" class="text-gray-400 hover:text-red-500 p-1.5 rounded hover:bg-red-50 text-xs transition shrink-0" title="Remove item">
             <i class="fas fa-trash-alt"></i>
         </button>
     `;
     container.appendChild(row);
+
+    if (type === 'iv' || type === 'dv') {
+        refreshHypothesisDropdowns();
+    }
+}
+
+function addHypothesisItem(value = "", selectedIv = "", rel = "positively influences", selectedDv = "") {
+    const container = document.getElementById('hypo-list-container');
+    if (!container) return;
+
+    const currentCount = container.children.length;
+    const index = currentCount + 1;
+
+    const ivs = getRawVariables('iv');
+    const dvs = getRawVariables('dv');
+
+    const ivOptions = ivs.length > 0 
+        ? ivs.map(v => `<option value="${v.name}" ${selectedIv === v.name ? 'selected' : ''}>${v.code}: ${v.name}</option>`).join('')
+        : '<option value="">(Add IVs above)</option>';
+
+    const dvOptions = dvs.length > 0 
+        ? dvs.map(v => `<option value="${v.name}" ${selectedDv === v.name ? 'selected' : ''}>${v.code}: ${v.name}</option>`).join('')
+        : '<option value="">(Add DVs above)</option>';
+
+    const cleanValue = typeof value === 'string' ? value.replace(/^H\s*\d*\s*[:.-]?\s*/i, '').trim() : '';
+    
+    // Default text if not provided
+    let initialText = cleanValue;
+    if (!initialText) {
+        const ivName = selectedIv || (ivs.length > 0 ? ivs[0].name : "Independent Variable");
+        const dvName = selectedDv || (dvs.length > 0 ? dvs[0].name : "Dependent Variable");
+        initialText = `${ivName} ${rel} ${dvName}.`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'hypo-card p-2.5 bg-white rounded-lg border border-amber-200 shadow-2xs space-y-1.5 dynamic-row';
+    card.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-1.5 border-b border-amber-100 pb-1.5">
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <span class="dynamic-badge text-[11px] font-bold px-2 py-0.5 rounded border text-center shrink-0 bg-amber-100 text-amber-800 border-amber-300">H${index}</span>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-tight">IV:</span>
+                <select class="hypo-iv-select border border-gray-300 rounded px-1.5 py-0.5 text-xs bg-white focus:ring-1 focus:ring-amber-500 max-w-[150px] truncate font-medium" onchange="updateHypoTextFromSelectors(this)">
+                    ${ivOptions}
+                </select>
+                <select class="hypo-rel-select border border-gray-300 rounded px-1.5 py-0.5 text-xs bg-white focus:ring-1 focus:ring-amber-500 font-medium" onchange="updateHypoTextFromSelectors(this)">
+                    <option value="positively influences" ${rel === 'positively influences' ? 'selected' : ''}>positively influences (+)</option>
+                    <option value="negatively influences" ${rel === 'negatively influences' ? 'selected' : ''}>negatively influences (-)</option>
+                    <option value="significantly impacts" ${rel === 'significantly impacts' ? 'selected' : ''}>significantly impacts (&beta;)</option>
+                    <option value="positively enhances" ${rel === 'positively enhances' ? 'selected' : ''}>positively enhances (+)</option>
+                    <option value="positively mediates" ${rel === 'positively mediates' ? 'selected' : ''}>positively mediates (M)</option>
+                </select>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-tight">&rarr; DV:</span>
+                <select class="hypo-dv-select border border-gray-300 rounded px-1.5 py-0.5 text-xs bg-white focus:ring-1 focus:ring-amber-500 max-w-[150px] truncate font-medium" onchange="updateHypoTextFromSelectors(this)">
+                    ${dvOptions}
+                </select>
+            </div>
+            <button type="button" onclick="removeDynamicItem(this, 'hypo')" class="text-gray-400 hover:text-red-500 p-1 rounded hover:bg-red-50 text-xs transition shrink-0" title="Remove hypothesis">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+        <input type="text" value="${initialText}" placeholder="e.g. Perceived AI Agency positively influences Intention to Adopt." class="dynamic-input w-full border border-gray-300 p-1.5 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none bg-amber-50/20 font-medium text-gray-800">
+    `;
+    container.appendChild(card);
+}
+
+function updateHypoTextFromSelectors(selectElement) {
+    const card = selectElement.closest('.hypo-card');
+    if (!card) return;
+    const ivSel = card.querySelector('.hypo-iv-select');
+    const relSel = card.querySelector('.hypo-rel-select');
+    const dvSel = card.querySelector('.hypo-dv-select');
+    const input = card.querySelector('.dynamic-input');
+
+    if (ivSel && relSel && dvSel && input) {
+        const ivVal = ivSel.value || "Independent Variable";
+        const relVal = relSel.value || "positively influences";
+        const dvVal = dvSel.value || "Dependent Variable";
+        input.value = `${ivVal} ${relVal} ${dvVal}.`;
+    }
+}
+
+function autoGenerateHypothesesFromVariables() {
+    const ivs = getRawVariables('iv');
+    const dvs = getRawVariables('dv');
+
+    if (ivs.length === 0 || dvs.length === 0) {
+        alert("Please add at least one Independent Variable (IV) and one Dependent Variable (DV) first.");
+        return;
+    }
+
+    const container = document.getElementById('hypo-list-container');
+    if (!container) return;
+    container.innerHTML = "";
+
+    const primaryDv = dvs[0].name;
+
+    ivs.forEach(iv => {
+        const lower = iv.name.toLowerCase();
+        const isNegative = /risk|resistance|anxiety|fear|cost|concern|deficit|barrier|threat|complexity/i.test(lower);
+        const rel = isNegative ? "negatively influences" : "positively influences";
+        const text = `${iv.name} ${rel} ${primaryDv}.`;
+        addHypothesisItem(text, iv.name, rel, primaryDv);
+    });
+
+    // If there is a second DV, generate cross-path hypothesis for secondary outcomes
+    if (dvs.length > 1 && ivs.length > 1) {
+        const secondDv = dvs[1].name;
+        const keyIv = ivs[0].name;
+        const text = `${keyIv} positively enhances ${secondDv}.`;
+        addHypothesisItem(text, keyIv, "positively enhances", secondDv);
+    }
 }
 
 function removeDynamicItem(btn, type) {
@@ -668,6 +831,9 @@ function removeDynamicItem(btn, type) {
             addDynamicItem(type, "");
         } else {
             reindexDynamicItems(type);
+        }
+        if (type === 'iv' || type === 'dv') {
+            refreshHypothesisDropdowns();
         }
     }
 }
@@ -693,6 +859,7 @@ function initDynamicInputs() {
             config.defaults.forEach(val => addDynamicItem(type, val));
         }
     });
+    refreshHypothesisDropdowns();
 }
 
 function getDynamicListValues(type) {
@@ -712,6 +879,7 @@ function getDynamicListValues(type) {
     });
     return results;
 }
+
 
 // Handle Auto-Generate Submit
 document.getElementById('auto-form').addEventListener('submit', async (e) => {
