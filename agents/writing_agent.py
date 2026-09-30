@@ -44,7 +44,7 @@ class AcademicWritingAgent(BaseAgent):
             context += f"Methodology: {state.preferred_methodology}\n"
         
         context += "\n--- Verified Peer-Reviewed Literature Base ---\n"
-        for src in state.sources[:16]:
+        for src in state.sources[:18]:
             context += f"Citation: {', '.join(src.authors)} ({src.year}). {src.title}. {src.journal} [{src.quartile}].\nAbstract: {src.metadata.get('abstract', '')[:300]}\n\n"
             
         if state.empirical_data:
@@ -160,10 +160,10 @@ class AcademicWritingAgent(BaseAgent):
         else:
             return f"{a1} ({s.year})"
 
-    def _get_distinct_citations(self, text: str, state: ResearchState, count: int = 3, excluded: Set[str] = None) -> List[str]:
+    def _get_distinct_citations(self, text: str, state: ResearchState, count: int = 5, excluded: Set[str] = None) -> List[str]:
         """
         Extracts `count` unique, non-repeating verified scholarly citations from scanned Q1/Q2 sources
-        that best match the given text (hypothesis statement or construct), while avoiding excluded citations.
+        that best match the given text (hypothesis statement or construct), strictly avoiding any excluded citations.
         """
         if excluded is None:
             excluded = set()
@@ -171,8 +171,13 @@ class AcademicWritingAgent(BaseAgent):
         curated_fallbacks = [
             "Davis (1989)",
             "Rogers (1995)",
-            "Tornatzky et al. (1990)",
+            "Tornatzky & Fleischer (1990)",
             "Mayer et al. (1995)",
+            "Alavi & Leidner (2001)",
+            "Nonaka & Takeuchi (1995)",
+            "Bandura (1986)",
+            "Deci & Ryan (2000)",
+            "Teece (2018)",
             "Bedué & Fritzsche (2022)",
             "Daly et al. (2025)",
             "Uren & Edwards (2023)",
@@ -187,20 +192,22 @@ class AcademicWritingAgent(BaseAgent):
             "Islam et al. (2026)",
             "Alqurni (2026)",
             "Venkatesh et al. (2022)",
-            "Bandura (1986)",
-            "Teece (2018)"
+            "Featherman & Pavlou (2003)",
+            "Tiago & Almeida (2026)",
+            "Hosseini & Seilani (2025)",
+            "Song et al. (2026)"
         ]
 
         results = []
         clean_target = text.lower()
-        target_words = set(re.findall(r'\b[a-zA-Z]{4,}\b', clean_target)) - {'positively', 'negatively', 'influences', 'impacts', 'enhances', 'mediates', 'statement', 'relationship', 'between', 'their', 'that', 'with'}
+        target_words = set(re.findall(r'\b[a-zA-Z]{4,}\b', clean_target)) - {'positively', 'negatively', 'influences', 'impacts', 'enhances', 'mediates', 'statement', 'relationship', 'between', 'their', 'that', 'with', 'process', 'model'}
 
         # Score sources based on keyword overlap
         scored_sources = []
         if state.sources:
             for s in state.sources:
                 cite_label = self._build_citation_label(s)
-                if cite_label in excluded:
+                if cite_label in excluded or cite_label in results:
                     continue
                 full_text = f"{s.title} {s.metadata.get('abstract', '')} {' '.join(s.metadata.get('matched_ivs', []))} {' '.join(s.metadata.get('matched_dvs', []))}".lower()
                 score = sum(1 for w in target_words if w in full_text)
@@ -262,7 +269,7 @@ class AcademicWritingAgent(BaseAgent):
         raw_hypos = state.hypotheses if state.hypotheses else [
             f"H1: {self._clean_prefix(raw_ivs[0], 'IV')} positively influences {self._clean_prefix(raw_dvs[0], 'DV')}.",
             f"H2: {self._clean_prefix(raw_ivs[1] if len(raw_ivs) > 1 else raw_ivs[0], 'IV')} significantly enhances technology-supported self-efficacy and task performance.",
-            f"H3: Leadership vision and change management capability positively moderate the relationship between technical readiness and sustained organizational adoption."
+            f"H3: Knowledge-sharing culture positively mediates the relationship between technical readiness and sustained organizational adoption."
         ]
 
         # Normalized with explicit serial numbering
@@ -273,7 +280,7 @@ class AcademicWritingAgent(BaseAgent):
         hypo_list = [f"H{i+1}: {self._clean_prefix(h, 'H')}" for i, h in enumerate(raw_hypos)]
         
         # Build master list of distinct citations
-        master_cites = self._get_distinct_citations(topic, state, count=12)
+        master_cites = self._get_distinct_citations(topic, state, count=16)
         c1, c2, c3, c4, c5, c6, c7 = master_cites[0], master_cites[1], master_cites[2], master_cites[3], master_cites[4], master_cites[5], master_cites[6]
 
         # 1. ABSTRACT (Trained on TFSC / IJIM / JEMS / JEIM Structured Conventions)
@@ -428,19 +435,20 @@ class AcademicWritingAgent(BaseAgent):
                 f"{gap_table_content}"
             )
 
-        # 6. 4. HYPOTHESES FRAMEWORK - DIVERSE, UNIQUE, DISTINCT CITATIONS PER HYPOTHESIS
+        # 6. 4. HYPOTHESES FRAMEWORK - 5 DISTINCT SCHOLARLY CITATIONS PER HYPOTHESIS WITH ZERO REPETITION
         elif "hypotheses" in sec_lower or "framework" in sec_lower:
             hypo_sections = []
             used_across_all_hypos: Set[str] = set()
 
-            # Theoretical anchoring mapping per hypothesis domain
+            # Pre-configured foundational theoretical anchors
             theory_foundations = [
-                ("Davis (1989)", "Technology Acceptance Model"),
-                ("Rogers (1995)", "Diffusion of Innovations Theory"),
-                ("Tornatzky & Fleischer (1990)", "Technology-Organization-Environment Framework"),
+                ("Davis (1989)", "Technology Acceptance Model (TAM)"),
+                ("Rogers (1995)", "Diffusion of Innovations (DoI) Theory"),
+                ("Tornatzky & Fleischer (1990)", "Technology-Organization-Environment (TOE) Framework"),
                 ("Mayer et al. (1995)", "Integrative Model of Organizational Trust"),
-                ("Bandura (1986)", "Social Cognitive Theory"),
-                ("Deci & Ryan (2000)", "Self-Determination Theory"),
+                ("Bandura (1986)", "Social Cognitive Theory (SCT)"),
+                ("Deci & Ryan (2000)", "Self-Determination Theory (SDT)"),
+                ("Alavi & Leidner (2001)", "Knowledge Management and Social Exchange Theory"),
                 ("Teece (2018)", "Dynamic Capabilities Framework")
             ]
 
@@ -448,25 +456,27 @@ class AcademicWritingAgent(BaseAgent):
                 h_code = h.split(':')[0].strip()
                 h_desc = h.split(':', 1)[1].strip()
                 
-                # Pick a distinct theoretical foundation
+                # Assign distinct theory anchor
                 t_cite, t_name = theory_foundations[i % len(theory_foundations)]
                 
-                # Query 3 distinct empirical studies specifically matching this hypothesis text
-                distinct_empirical = self._get_distinct_citations(h_desc, state, count=3, excluded=used_across_all_hypos | {t_cite})
-                e_cite1 = distinct_empirical[0] if len(distinct_empirical) > 0 else "Bedué & Fritzsche (2022)"
-                e_cite2 = distinct_empirical[1] if len(distinct_empirical) > 1 else "Daly et al. (2025)"
-                e_cite3 = distinct_empirical[2] if len(distinct_empirical) > 2 else "Uren & Edwards (2023)"
+                # Fetch 4 distinct empirical Q1/Q2 citations for this specific hypothesis
+                cites_needed = self._get_distinct_citations(h_desc, state, count=4, excluded=used_across_all_hypos | {t_cite})
+                c_emp1 = cites_needed[0] if len(cites_needed) > 0 else "Bedué & Fritzsche (2022)"
+                c_emp2 = cites_needed[1] if len(cites_needed) > 1 else "Daly et al. (2025)"
+                c_emp3 = cites_needed[2] if len(cites_needed) > 2 else "Uren & Edwards (2023)"
+                c_emp4 = cites_needed[3] if len(cites_needed) > 3 else "Schwaeke et al. (2025)"
                 
-                # Register all as used to prevent ANY repetition across subsequent hypotheses
-                used_across_all_hypos.update([t_cite, e_cite1, e_cite2, e_cite3])
+                # Prevent any overlap in subsequent hypotheses
+                used_across_all_hypos.update([t_cite, c_emp1, c_emp2, c_emp3, c_emp4])
                 
                 hypo_sections.append(
-                    f"#### 4.{i+1} Hypothesis Development ({h_code}): {h_desc}\n"
-                    f"Theoretical discourse surrounding this relationship is formally anchored in the {t_name}, which posits that individual behavioral evaluations and institutional adoption rates are governed by expected operational utility, compatibility, and structured organizational enablers ({t_cite}). "
-                    f"Prior empirical investigations by {e_cite1} substantiate that when technological antecedents operate with high fidelity and transparency, users perceive substantial performance improvements and reduced cognitive burden. "
-                    f"Furthermore, recent empirical research by {e_cite2} indicates that providing verifiable evidence of system reliability actively mitigates skepticism, fostering calibrated cognitive trust across both managerial and operational roles. "
-                    f"Conversely, where organizational support or data readiness are lacking, adoption intentions are significantly inhibited by perceived vulnerability and institutional inertia ({e_cite3}). "
-                    f"Synthesizing these complementary theoretical and empirical perspectives, we formally hypothesize:\n\n"
+                    f"#### 4.{i+1} Hypothesis Development ({h_code}): {h_desc}\n\n"
+                    f"Theoretical discourse surrounding this relationship is formally anchored in the {t_name} ({t_cite}), which posits that individual behavioral intentions and institutional adoption rates are governed by expected operational utility, structural compatibility, and supportive organizational infrastructure. "
+                    f"Prior empirical investigations by {c_emp1} demonstrate that when technological antecedents operate with high fidelity and transparency, users perceive substantial performance improvements, which directly reduce cognitive friction and task complexity.\n\n"
+                    f"Furthermore, recent empirical scholarship by {c_emp2} and {c_emp3} reveals that providing verifiable evidence of algorithmic reliability actively mitigates skepticism, fostering calibrated cognitive trust across both managerial and operational roles. "
+                    f"In collaborative environments, knowledge-sharing and organizational readiness act as essential socio-technical catalysts that convert technical capability into sustained collective performance ({c_emp4}). "
+                    f"Conversely, where organizational support or data readiness are lacking, adoption intentions are significantly inhibited by perceived vulnerability and institutional inertia. "
+                    f"Synthesizing these multi-theoretical and empirical arguments, we formally hypothesize:\n\n"
                     f"> **{h_code}:** *{h_desc}*"
                 )
             
@@ -687,6 +697,8 @@ class AcademicWritingAgent(BaseAgent):
                 f"- Dwivedi, Y. K., Helal, M. Y. I., Elgendy, I. A., Alahmad, R., Walton, P., Suh, A., Singh, V., & Jeon, I. (2025). Agentic AI Systems: What It Is and Isn’t. *Global Business and Organizational Excellence*, 45(3), 253–263. https://doi.org/10.1002/joe.70018 [Wiley Q1]",
                 f"- Hughes, L., Dwivedi, Y. K., Malik, T., Shawosh, M., Albashrawi, M. A., Jeon, I., Dutot, V., Appanderanda, M., Crick, T., De’, R., Fenwick, M., Gunaratnege, S. M., Jurcys, P., Kar, A. K., Kshetri, N., Li, K., Mutasa, S., Samothrakis, S., Wade, M., & Walton, P. (2025). AI Agents and Agentic Systems: A Multi-Expert Analysis. *Journal of Computer Information Systems*, 65(4), 489–517. https://doi.org/10.1080/08874417.2025.2483832 [Taylor & Francis Q1]",
                 f"- Islam, M. A., Almashayekhi, A., Rahman, M., & Somu, S. (2026). Igniting intention to use agentic AI: role of agentic AI explainability, perceived autonomy, knowledge-sharing culture and technical efficacy. *VINE Journal of Information and Knowledge Management Systems*. https://doi.org/10.1108/VJIKMS-01-2026-0004 [Emerald Q1]",
+                f"- Alavi, M., & Leidner, D. E. (2001). Review: Knowledge management and knowledge management systems: Conceptual foundations and research issues. *MIS Quarterly*, 25(1), 107–136.",
+                f"- Nonaka, I., & Takeuchi, H. (1995). *The knowledge-creating company: How Japanese companies create the dynamics of innovation*. Oxford University Press.",
                 f"- Mayer, R. C., Davis, J. H., & Schoorman, F. D. (1995). An integrative model of organizational trust. *Academy of Management Review*, 20(3), 709–734. https://doi.org/10.5465/amr.1995.9508080332",
                 f"- Rogers, E. M. (1995). *Diffusion of Innovations* (4th ed.). New York: The Free Press.",
                 f"- Tornatzky, L. G., & Fleischer, M. (1990). *The processes of technological innovation*. Lexington, MA: Lexington Books."
@@ -721,11 +733,12 @@ class AcademicWritingAgent(BaseAgent):
         Your task is to WRITE the complete, thorough, publication-ready academic text for the section '{section}'.
         
         CRITICAL STYLISTIC AND CITATION RULES:
-        - NEVER repeat the same citation multiple times in a single paragraph. Every paragraph must cite multiple distinct, complementary sources.
+        - EVERY hypothesis must cite AT LEAST 4 TO 5 DIFFERENT, UNIQUE SCHOLARLY SOURCES.
+        - NEVER repeat the same citation multiple times in a single paragraph.
         - Ground arguments in TOE, DoI, Socio-Technical PPTD, Extended Valence Framework, Organizational Trust, TAM/UTAUT, SCT, SDT, and Dynamic Capabilities.
         - Embed structured markdown comparison tables, psychometric factor loading tables, or PLS-SEM path tables where relevant.
         - If writing Findings/Results, include bold 'Finding: ...' declarations synthesizing key socio-technical discoveries.
-        - If writing Hypotheses, provide formal deductive theoretical rationales citing specific, distinct literature for each path.
+        - If writing Hypotheses, provide formal deductive theoretical rationales citing 4-5 distinct literature sources for each path.
         - Never use cliché AI phrases (e.g., 'In today's fast-paced world', 'delve into', 'a testament to').
         - Output ONLY the written section content.
         """
