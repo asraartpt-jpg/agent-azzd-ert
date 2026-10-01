@@ -179,9 +179,14 @@
                             </div>
                             <h1 class="text-xl font-bold mt-2 text-gray-900" id="doc-title">[Untitled Research Paper]</h1>
                         </div>
-                        <button onclick="document.getElementById('switch-modal').classList.remove('hidden')" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg shadow hover:bg-indigo-700 transition text-xs font-semibold flex items-center">
-                            <i class="fas fa-sliders-h mr-1.5"></i> Custom Style Settings
-                        </button>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="downloadDocx()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg shadow transition text-xs font-semibold flex items-center">
+                                <i class="fas fa-file-word mr-1.5"></i> Export .DOCX
+                            </button>
+                            <button onclick="document.getElementById('switch-modal').classList.remove('hidden')" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg shadow hover:bg-indigo-700 transition text-xs font-semibold flex items-center">
+                                <i class="fas fa-sliders-h mr-1.5"></i> Custom Style Settings
+                            </button>
+                        </div>
                     </div>
                     
                     <div id="doc-content" class="prose max-w-none text-gray-800 leading-relaxed text-sm">
@@ -346,7 +351,10 @@
                                 <label class="block text-xs font-bold text-gray-800"><i class="fas fa-project-diagram text-amber-600 mr-1"></i> Research Hypotheses (IV &rarr; DV Framework)</label>
                                 <p class="text-[10px] text-gray-500">Formulate structural path hypotheses based on IV &amp; DV relationships</p>
                             </div>
-                            <div class="flex items-center space-x-1.5">
+                            <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                                <button type="button" onclick="extractHypothesesFromScannedPapers()" class="text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-semibold px-2 py-1 rounded shadow transition flex items-center" title="Auto-extract hypotheses from uploaded PDFs or scanned Q1/Q2 literature">
+                                    <i class="fas fa-file-contract mr-1 text-[9px]"></i> Extract from Papers &amp; Literature
+                                </button>
                                 <button type="button" onclick="autoGenerateHypothesesFromVariables()" class="text-[11px] bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2 py-1 rounded shadow transition flex items-center" title="Automatically generate hypotheses linking all IVs to DVs">
                                     <i class="fas fa-bolt mr-1 text-[9px]"></i> Auto-Build from IVs &amp; DVs
                                 </button>

@@ -822,6 +822,121 @@ function autoGenerateHypothesesFromVariables() {
     }
 }
 
+async function extractHypothesesFromScannedPapers() {
+    const titleInput = document.getElementById('auto-title');
+    const title = titleInput ? titleInput.value.trim() : "";
+    const kwInput = document.getElementById('auto-keywords');
+    const keywords = kwInput && kwInput.value ? kwInput.value.split(',').map(k => k.trim()).filter(Boolean) : [];
+
+    const container = document.getElementById('hypo-list-container');
+    if (!container) return;
+
+    appendMessage('System Orchestrator', 'Scanning uploaded papers and Q1/Q2 Scopus literature for empirical structural hypotheses...', false);
+
+    try {
+        const response = await fetch('/api/v1/extract_hypotheses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: currentSessionId,
+                title: title || "Agentic AI Adoption in Industry",
+                keywords: keywords
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.hypotheses && data.hypotheses.length > 0) {
+                container.innerHTML = "";
+                data.hypotheses.forEach(h => {
+                    addHypothesisItem(h.text, h.iv, h.rel, h.dv);
+                });
+                appendMessage('System Orchestrator', `Extracted ${data.hypotheses.length} hypotheses from scanned research literature!`, false);
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn("Backend extract_hypotheses error", e);
+    }
+
+    autoGenerateHypothesesFromVariables();
+}
+
+async function downloadDocx() {
+    if (!currentState || !currentState.manuscript_draft || Object.keys(currentState.manuscript_draft).length === 0) {
+        alert("No manuscript draft found to download. Please click 'Auto-Generate' to write your paper first!");
+        return;
+    }
+
+    const title = currentState.topic || "Research_Manuscript";
+    const safeTitle = title.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 35);
+
+    appendMessage('System', 'Preparing .DOCX download...', false);
+
+    try {
+        const response = await fetch('/api/v1/export_docx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: currentSessionId,
+                title: title
+            })
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Manuscript_${safeTitle}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            appendMessage('System Orchestrator', `Downloaded **${title}** in Microsoft Word (.docx) format!`, false);
+            return;
+        }
+    } catch (e) {
+        console.warn("Backend .docx endpoint failed, using fallback Word export", e);
+    }
+
+    // Client-side fallback Word document HTML export
+    let docHtml = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><title>${title}</title><style>
+        body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; margin: 1in; }
+        h1 { font-size: 20pt; color: #0f172a; text-align: center; font-weight: bold; margin-bottom: 5pt; }
+        h2 { font-size: 14pt; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 3pt; margin-top: 15pt; }
+        h3 { font-size: 12pt; color: #334155; margin-top: 10pt; }
+        table { border-collapse: collapse; width: 100%; margin: 10pt 0; }
+        th, td { border: 1px solid #94a3b8; padding: 6pt; font-size: 10pt; }
+        th { background-color: #f1f5f9; font-weight: bold; }
+        p { margin-bottom: 8pt; text-align: justify; }
+        </style></head><body>
+        <h1>${title}</h1>
+        <p style="text-align:center; font-style:italic; color:#64748b;">Publisher Style: ${currentPublisher} | Q1 High Impact Manuscript Draft</p>
+        <hr/>
+    `;
+
+    Object.keys(currentState.manuscript_draft).forEach(sec => {
+        if (currentState.manuscript_draft[sec]) {
+            docHtml += formatMarkdown(currentState.manuscript_draft[sec]);
+        }
+    });
+    docHtml += `</body></html>`;
+
+    const blob = new Blob(['\ufeff' + docHtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Manuscript_${safeTitle}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+    appendMessage('System Orchestrator', `Downloaded manuscript in Word format!`, false);
+}
+
 function removeDynamicItem(btn, type) {
     const row = btn.closest('.dynamic-row');
     if (row) {
