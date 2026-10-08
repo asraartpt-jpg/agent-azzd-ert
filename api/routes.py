@@ -41,6 +41,18 @@ from agents.gap_synthesis_agent import GapSynthesisAgent
 from agents.theory_agent import TheoryAgent
 from agents.originality_agent import OriginalityAgent
 
+# Dedicated Section Writing Agents requested by user
+from agents.abstract_agent import AbstractWritingAgent
+from agents.introduction_agent import IntroductionWritingAgent
+from agents.theoretical_background_agent import TheoreticalBackgroundAgent
+from agents.literature_review_writing_agent import LiteratureReviewWritingAgent
+from agents.hypotheses_development_agent import HypothesesDevelopmentAgent
+from agents.methodology_writing_agent import MethodologyWritingAgent
+from agents.data_analysis_agent import DataAnalysisAgent
+from agents.results_discussion_agent import ResultsDiscussionAgent
+from agents.theoretical_contributions_agent import TheoreticalContributionsAgent
+from agents.limitations_future_agent import LimitationsFutureAgent
+
 router = APIRouter()
 
 orchestrator = Orchestrator()
@@ -56,6 +68,18 @@ orchestrator.register_agent("writing", AcademicWritingAgent())
 orchestrator.register_agent("citation", CitationIntegrationAgent())
 orchestrator.register_agent("formatting", PublisherFormattingAgent())
 orchestrator.register_agent("quality", QualityReviewAgent())
+
+# Dedicated 10 Section Writing Agents
+orchestrator.register_agent("abstract", AbstractWritingAgent())
+orchestrator.register_agent("introduction", IntroductionWritingAgent())
+orchestrator.register_agent("theoretical_background", TheoreticalBackgroundAgent())
+orchestrator.register_agent("literature_review", LiteratureReviewWritingAgent())
+orchestrator.register_agent("hypotheses_development", HypothesesDevelopmentAgent())
+orchestrator.register_agent("methodology_writing", MethodologyWritingAgent())
+orchestrator.register_agent("data_analysis", DataAnalysisAgent())
+orchestrator.register_agent("results_discussion", ResultsDiscussionAgent())
+orchestrator.register_agent("theoretical_contributions", TheoreticalContributionsAgent())
+orchestrator.register_agent("limitations_future_research", LimitationsFutureAgent())
 
 # New pipeline agents
 orchestrator.register_agent("intelligence", IntelligenceAgent())

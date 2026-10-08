@@ -325,7 +325,7 @@ class AcademicWritingAgent(BaseAgent):
             kw_set = topic_keywords + ["Technology Adoption", "TOE Framework", "Socio-Technical Systems", "Trust in AI", "Structural Equation Modeling", "Job Enrichment"]
             return " | ".join(kw_set[:6])
 
-        # 3. 1. INTRODUCTION (Trained deeply on Daly et al. 2025, Uren & Edwards 2023, McElheran et al. 2024, Bedué & Fritzsche 2022)
+        # 3. 1. INTRODUCTION (Trained deeply on Daly et al. 2025, Uren & Edwards 2023, McElheran et al. 2024, Bedué & Fritzsche 2022, Akhtar et al. 2021, Jaiswal & Singh 2018)
         elif "introduction" in sec_lower:
             rq_formatted = "\n".join([f"- **{q.split(':')[0]}:** *{q.split(':', 1)[1].strip()}*" for q in rq_list])
             ro_formatted = "\n".join([f"- **{o.split(':')[0]}:** *{o.split(':', 1)[1].strip()}*" for o in ro_list])
@@ -347,9 +347,17 @@ class AcademicWritingAgent(BaseAgent):
                 f"intelligent agents ({c1}; Mayer et al., 1995). Fostering trust, however, is frequently complicated by the opaque 'black box' nature of complex models, non-deterministic reasoning, "
                 f"and algorithmic hallucinations ({c1}; {c3}). Furthermore, recent empirical evidence indicates a persistent *reality gap* in technology diffusion: while headline media reports suggest "
                 f"ubiquitous adoption, large-scale representative enterprise data reveals that actual intensive deployment in production remains low and heavily skewed toward large firms and specialized hubs ({c4}). "
-                f"Many organizations struggle to transition AI initiatives beyond isolated lab prototypes across the proverbial 'valley of death' into mature operational systems ({c2}). "
-                f"A critical research gap remains in understanding how individual attitudes, technological readiness, and organizational structures interact to facilitate sustainable adoption.\n\n"
-                f"### 1.3 Delineation of Architectural Paradigms\n"
+                f"Many organizations struggle to transition AI initiatives beyond isolated lab prototypes across the proverbial 'valley of death' into mature operational systems ({c2}).\n\n"
+                f"### 1.3 Identification of Research Gap and Urgent Need for Research\n"
+                f"Despite the growing body of literature on technological adoption ({c1}; {c3}; {c4}), a critical **empirical and theoretical research gap** persists in contemporary scholarship. "
+                f"First, existing frameworks (such as traditional TAM or linear TPB models) predominantly examine static cognitive utility or isolated user intentions ({c1}; Davis, 1989; Ajzen, 1991), "
+                f"failing to capture how autonomous, non-deterministic agentic capabilities interact dynamically with socio-technical governance and organizational absorptive capacity ({c2}; {c5}). "
+                f"Second, prior studies have largely focused either purely on macro-level firm characteristics ({c4}) or on micro-level user attitudes ({c1}), without providing an integrative multi-level model "
+                f"that links technological antecedents ({', '.join([v.split(':')[0] for v in iv_list])}) with mediating psychological mechanisms and multi-dimensional performance outcomes ({', '.join([v.split(':')[0] for v in dv_list])}). "
+                f"Third, the literature reveals contradictory findings regarding whether technical readiness alone converts to sustained operational adoption or if non-volitional facilitating conditions "
+                f"(such as data governance and leadership vision) dominate the adoption path ({c2}; {c3}). There is an **urgent academic and practical need for research** to establish an empirically validated, "
+                f"multi-theoretical model that reconciles these conflicting findings, illuminates the underlying socio-technical mechanisms, and provides actionable guidelines for enterprise decision-makers.\n\n"
+                f"### 1.4 Delineation of Architectural Paradigms\n"
                 f"To establish conceptual clarity, Table 1 delineates {topic} from predecessor paradigms across key architectural and operational dimensions:\n\n"
                 f"| Architectural Feature | Traditional AI / Expert Systems | Generative AI (GenAI) | Autonomous Agentic Systems |\n"
                 f"| :--- | :--- | :--- | :--- |\n"
@@ -359,17 +367,17 @@ class AcademicWritingAgent(BaseAgent):
                 f"| **Tool & Data Integration** | Isolated closed database | Static retrieval-augmented plugins | Dynamic tool orchestration (MCP, APIs, DBs) |\n"
                 f"| **Human Interaction Mode** | Manual rule maintainer | Prompt engineer & curator | Collaborative co-agency with guardrails |\n"
                 f"| **Representative Precedents** | MYCIN, XCON, Linear Classifiers | ChatGPT-4, Claude, Midjourney | AutoGPT, DevIn, Enterprise Agent Stacks |\n\n"
-                f"### 1.4 Research Questions, Objectives, and Variable Specification\n"
-                f"To address these theoretical and empirical imperatives, this study addresses the following central research questions:\n\n"
+                f"### 1.5 Research Questions, Research Objectives, and Variable Specification\n"
+                f"To address the identified research gap and satisfy the urgent need for empirical clarity, this study formulates the following central **Research Questions (RQs)**:\n\n"
                 f"{rq_formatted}\n\n"
-                f"Accordingly, the specific research objectives are formulated as follows:\n\n"
+                f"Directly aligned with these research questions, the specific **Research Objectives (ROs)** are defined as follows:\n\n"
                 f"{ro_formatted}\n\n"
                 f"To systematically investigate these relationships, the empirical inquiry is operationalized across the following independent and dependent constructs:\n\n"
                 f"**Independent Variables (IVs):**\n"
                 f"{iv_formatted}\n\n"
                 f"**Dependent Variables (DVs):**\n"
                 f"{dv_formatted}\n\n"
-                f"### 1.5 Structure of the Manuscript\n"
+                f"### 1.6 Structure of the Manuscript\n"
                 f"The remainder of this article is organized as follows: Section 2 establishes the Theoretical Background; Section 3 conducts a comprehensive Literature Review; "
                 f"Section 4 formulates the Hypotheses Framework; Section 5 details the Methodology and Research Design; Section 6 presents Data Analysis and Interpretation; "
                 f"Section 7 discusses the Results and Empirical Findings; Section 8 articulates Theoretical Contributions and Practical Implications; Section 9 concludes the paper; "
