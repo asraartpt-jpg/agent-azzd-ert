@@ -169,6 +169,20 @@ class AcademicWritingAgent(BaseAgent):
             excluded = set()
             
         curated_fallbacks = [
+            "Akhtar et al. (2021)",
+            "Jaiswal & Singh (2018)",
+            "Tong et al. (2023)",
+            "Bhattacharyya et al. (2023)",
+            "Yuan et al. (2020)",
+            "Ajzen (1991)",
+            "Fishbein & Ajzen (1975)",
+            "Sheth et al. (1991)",
+            "Olander & Thøgersen (1995)",
+            "Schwartz & Howard (1981)",
+            "Podsakoff et al. (2003)",
+            "Fornell & Larcker (1981)",
+            "Henseler et al. (2015)",
+            "Hair et al. (2019)",
             "Davis (1989)",
             "Rogers (1995)",
             "Tornatzky & Fleischer (1990)",
@@ -192,10 +206,7 @@ class AcademicWritingAgent(BaseAgent):
             "Islam et al. (2026)",
             "Alqurni (2026)",
             "Venkatesh et al. (2022)",
-            "Featherman & Pavlou (2003)",
-            "Tiago & Almeida (2026)",
-            "Hosseini & Seilani (2025)",
-            "Song et al. (2026)"
+            "Featherman & Pavlou (2003)"
         ]
 
         results = []
@@ -745,6 +756,11 @@ class AcademicWritingAgent(BaseAgent):
             
             # Add foundational references if not present
             foundational_refs = [
+                f"- Akhtar, R., Sultana, S., Masud, M. M., Jafrin, N., & Al-Mamun, A. (2021). Consumers' environmental ethics, willingness, and green consumerism between lower and higher income groups. *Resources, Conservation & Recycling*, 168, 105274. https://doi.org/10.1016/j.resconrec.2020.105274 [Elsevier Q1]",
+                f"- Jaiswal, D., & Singh, B. (2018). Toward sustainable consumption: Investigating the determinants of green buying behaviour of Indian consumers. *Business Strategy and Development*, 1(1), 64–73. https://doi.org/10.1002/bsd2.12 [Wiley Q1]",
+                f"- Tong, L., Toppinen, A., Wang, L., & Berghäll, S. (2023). How motivation, opportunity, and ability impact sustainable consumption behaviour of fresh berry products. *Journal of Cleaner Production*, 401, 136698. https://doi.org/10.1016/j.jclepro.2023.136698 [Elsevier Q1]",
+                f"- Yuan, T., Guan, Q., & Bo, X. (2020). An Empirical Study of the Government Pro-Environment Policy Leading Effects on Multi-Level Factors that Influences on People's Green Consumption Behaviour. *IOP Conference Series: Earth and Environmental Science*, 576, 012016. https://doi.org/10.1088/1755-1315/576/1/012016",
+                f"- Bhattacharyya, J., Balaji, M. S., & Jiang, Y. (2023). Causal complexity of sustainable consumption: Unveiling the equifinal causes of purchase intentions of plant-based meat alternatives. *Journal of Business Research*, 156, 113511. https://doi.org/10.1016/j.jbusres.2022.113511 [Elsevier Q1]",
                 f"- Daly, S. J., Wiewiora, A., & Hearn, G. (2025). Shifting attitudes and trust in AI: Influences on organizational AI adoption. *Technological Forecasting and Social Change*, 215, 124108. https://doi.org/10.1016/j.techfore.2025.124108 [Q1]",
                 f"- Uren, V., & Edwards, J. S. (2023). Technology readiness and the organizational journey towards AI adoption: An empirical study. *International Journal of Information Management*, 68, 102588. https://doi.org/10.1016/j.ijinfomgt.2022.102588 [Q1]",
                 f"- Bedué, P., & Fritzsche, A. (2022). Can we trust AI? An empirical investigation of trust requirements and guide to successful AI adoption. *Journal of Enterprise Information Management*, 35(2), 530–549. https://doi.org/10.1108/JEIM-06-2020-0233 [Q1]",
