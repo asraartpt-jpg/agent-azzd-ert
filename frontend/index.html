@@ -351,7 +351,7 @@
                         <div id="ro-list-container" class="space-y-1.5"></div>
                     </div>
 
-                    <div class="bg-amber-50/50 p-2.5 rounded-lg border border-amber-200">
+                    <div class="bg-amber-50/50 p-2.5 rounded-lg border border-amber-200 mb-3">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
                             <div>
                                 <label class="block text-xs font-bold text-gray-800"><i class="fas fa-project-diagram text-amber-600 mr-1"></i> Research Hypotheses (IV &rarr; DV Framework)</label>
@@ -371,6 +371,48 @@
                         </div>
                         <div id="hypo-list-container" class="space-y-2"></div>
                     </div>
+
+                    <div class="bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-200 mb-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-800"><i class="fas fa-book-reader text-indigo-600 mr-1"></i> Theoretical Foundations &amp; Lenses (TB1, TB2...)</label>
+                                <p class="text-[10px] text-gray-500">Specify core theoretical models (e.g. TPB, TAM, MOA, TOE, TCV, NAM)</p>
+                            </div>
+                            <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                                <button type="button" onclick="autoGenerateTheoreticalFoundations()" class="text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2 py-1 rounded shadow transition flex items-center" title="Auto-suggest theoretical foundations for this topic">
+                                    <i class="fas fa-magic mr-1 text-[9px]"></i> Auto-Suggest Theories
+                                </button>
+                                <button type="button" onclick="addDynamicItem('tb')" class="text-[11px] bg-white hover:bg-indigo-100 text-indigo-900 font-semibold px-2 py-1 rounded border border-indigo-300 shadow-2xs transition flex items-center">
+                                    <i class="fas fa-plus mr-1 text-[9px]"></i> Add Theory
+                                </button>
+                            </div>
+                        </div>
+                        <div id="tb-list-container" class="space-y-1.5"></div>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-200 mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-gray-800"><i class="fas fa-flask text-emerald-600 mr-1"></i> Methodology Specifications (Sample Size, Sampling &amp; Data Collection)</label>
+                        <button type="button" onclick="autoFillMethodologyDefaults()" class="text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2 py-1 rounded shadow transition flex items-center" title="Auto-fill recommended Q1 empirical methodology parameters">
+                            <i class="fas fa-magic mr-1 text-[9px]"></i> Auto-Fill Q1 Defaults
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-700 mb-1">Target Sample Size (N) *</label>
+                            <input type="text" id="auto-sample-size" class="w-full border border-gray-300 p-2 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white" placeholder="e.g. 308 (or 410 / G*Power 3.1)">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-700 mb-1">Sampling Method *</label>
+                            <input type="text" id="auto-sampling-method" class="w-full border border-gray-300 p-2 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white" placeholder="e.g. Clustered Random Sampling / Purposive Sampling">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-700 mb-1">Data Collection Method *</label>
+                            <input type="text" id="auto-data-collection" class="w-full border border-gray-300 p-2 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white" placeholder="e.g. Structured Questionnaire via Face-to-Face & Online Survey">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-1.5">The agent will write Section 5 (Methodology) around these exact inputs with citations (G*Power 3.1, Hair et al., Podsakoff et al.).</p>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>

@@ -312,13 +312,79 @@ function switchTab(tabId) {
 
 function formatMarkdown(text) {
     if (!text) return "";
-    let html = text.replace(/### (.*)/g, '<h3 class="text-lg font-bold mt-5 mb-2 border-b pb-1 text-gray-800">$1</h3>');
-    html = html.replace(/#### (.*)/g, '<h4 class="text-base font-semibold mt-3.5 mb-1.5 text-gray-800">$1</h4>');
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/\n\n/g, '</p><p class="mb-3.5 text-gray-800 leading-relaxed text-sm">');
-    html = html.replace(/\n- (.*)/g, '<li class="ml-5 list-disc text-gray-700 text-sm">$1</li>');
-    return `<p class="mb-3.5 text-gray-800 leading-relaxed text-sm">${html}</p>`;
+    let html = cleanCitationParens(text);
+
+    // Parse Fenced Code Blocks (e.g. text/ASCII flow diagrams)
+    html = html.replace(/```(?:text|plain)?\s*\n([\s\S]*?)\n```/g, (match, code) => {
+        return `<pre class="bg-slate-900 text-emerald-400 p-3 rounded-lg text-xs overflow-x-auto font-mono my-3 shadow-inner border border-slate-800">${code}</pre>`;
+    });
+
+    // Parse Markdown Tables
+    html = parseMarkdownTables(html);
+
+    // Parse Blockquotes
+    html = parseBlockquotes(html);
+
+    // Headings
+    html = html.replace(/### (.*)/g, '<h3 class="text-lg font-bold mt-5 mb-2 border-b pb-1 text-slate-900 flex items-center"><i class="fas fa-bookmark text-indigo-600 mr-2 text-xs"></i>$1</h3>');
+    html = html.replace(/#### (.*)/g, '<h4 class="text-base font-semibold mt-3.5 mb-1.5 text-slate-800">$1</h4>');
+    html = html.replace(/## (.*)/g, '<h2 class="text-xl font-extrabold mt-6 mb-3 text-slate-900 border-b-2 border-indigo-200 pb-1">$1</h2>');
+
+    // Bold & Italics
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em class="italic text-slate-800">$1</em>');
+
+    // List items
+    html = html.replace(/\n- (.*)/g, '<li class="ml-5 list-disc text-slate-700 text-xs leading-relaxed my-1">$1</li>');
+
+    // Paragraph breaks
+    html = html.replace(/\n\n/g, '</p><p class="mb-3.5 text-slate-800 leading-relaxed text-xs sm:text-sm">');
+
+    return `<p class="mb-3.5 text-slate-800 leading-relaxed text-xs sm:text-sm">${html}</p>`;
+}
+
+function cleanCitationParens(text) {
+    if (!text) return "";
+    return text.replace(/\(\((.*?)\)\)/g, '($1)');
+}
+
+function parseMarkdownTables(text) {
+    const tableRegex = /(?:(?:\|[^\n]+\|\r?\n){2,})/g;
+    return text.replace(tableRegex, (match) => {
+        const lines = match.trim().split(/\r?\n/).filter(line => line.trim().startsWith('|'));
+        if (lines.length < 2) return match;
+
+        let headerLine = lines[0];
+        let bodyLines = lines.slice(2);
+
+        const headers = headerLine.split('|').slice(1, -1).map(cell => cell.trim());
+        const rows = bodyLines.map(line => line.split('|').slice(1, -1).map(cell => cell.trim()));
+
+        let tableHtml = `<div class="overflow-x-auto my-4 shadow-sm rounded-lg border border-slate-200"><table class="min-w-full divide-y divide-slate-200 text-xs">`;
+        tableHtml += `<thead class="bg-slate-100 text-slate-800 font-bold"><tr>`;
+        headers.forEach(h => {
+            tableHtml += `<th class="px-3 py-2 text-left font-bold text-slate-800 border-b border-slate-300 uppercase tracking-wider text-[11px]">${h}</th>`;
+        });
+        tableHtml += `</tr></thead><tbody class="divide-y divide-slate-200 bg-white">`;
+
+        rows.forEach((row, rIdx) => {
+            const bg = rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70';
+            tableHtml += `<tr class="${bg} hover:bg-indigo-50/40 transition">`;
+            row.forEach(cell => {
+                tableHtml += `<td class="px-3 py-2 text-slate-700 leading-normal border-b border-slate-100">${cell}</td>`;
+            });
+            tableHtml += `</tr>`;
+        });
+
+        tableHtml += `</tbody></table></div>`;
+        return tableHtml;
+    });
+}
+
+function parseBlockquotes(text) {
+    return text.replace(/(?:^|\n)> (.*)/g, (match, content) => {
+        return `<blockquote class="border-l-4 border-indigo-600 bg-indigo-50/60 p-3 my-3 text-indigo-950 text-xs italic rounded-r-lg shadow-2xs">${content}</blockquote>`;
+    });
 }
 
 function setActivePublisherButton(publisherName) {
@@ -626,8 +692,47 @@ const dynamicConfig = {
         ringClass: 'focus:ring-amber-500',
         placeholder: 'e.g. Perceived AI agency positively impacts perceived usefulness.',
         defaults: ['Perceived AI agency positively impacts perceived usefulness.', 'Autonomy support positively impacts employee task performance.', 'Knowledge-sharing culture positively mediates the adoption process.']
+    },
+    tb: {
+        prefix: 'TB',
+        containerId: 'tb-list-container',
+        badgeClass: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+        ringClass: 'focus:ring-indigo-500',
+        placeholder: 'e.g. Technology Acceptance Model (TAM)',
+        defaults: [
+            'Technology Acceptance Model (TAM) [Davis, 1989]',
+            'Technology-Organization-Environment (TOE) Framework [Tornatzky & Fleischer, 1990]',
+            'Unified Theory of Acceptance and Use of Technology (UTAUT2) [Venkatesh et al., 2012]'
+        ]
     }
 };
+
+function autoGenerateTheoreticalFoundations() {
+    const container = document.getElementById('tb-list-container');
+    if (!container) return;
+    container.innerHTML = "";
+
+    const suggested = [
+        "Technology Acceptance Model (TAM) [Davis, 1989]",
+        "Technology-Organization-Environment (TOE) Framework [Tornatzky & Fleischer, 1990]",
+        "Unified Theory of Acceptance and Use of Technology (UTAUT2) [Venkatesh et al., 2012]",
+        "Diffusion of Innovations (DoI) Theory [Rogers, 1995]",
+        "Extended Valence Framework & Trust Theory [Bedué & Fritzsche, 2022; Mayer et al., 1995]",
+        "Socio-Technical People-Processes-Technology-Data (PPTD) Model [Uren & Edwards, 2023]"
+    ];
+
+    suggested.forEach(t => addDynamicItem('tb', t));
+}
+
+function autoFillMethodologyDefaults() {
+    const sInput = document.getElementById('auto-sample-size');
+    const mInput = document.getElementById('auto-sampling-method');
+    const dInput = document.getElementById('auto-data-collection');
+
+    if (sInput) sInput.value = "308 (G*Power 3.1 minimum 154)";
+    if (mInput) mInput.value = "Clustered Random Sampling";
+    if (dInput) dInput.value = "Structured Questionnaire via Offline & Online Survey";
+}
 
 function openAutoModal() {
     initDynamicInputs();
@@ -1066,22 +1171,31 @@ document.getElementById('auto-form').addEventListener('submit', async (e) => {
             }
         }
     
-        const payload = {
-            session_id: sessionId || null,
-            title: title,
-            keywords: keywords.length > 0 ? keywords : null,
-            target_publisher: publisher,
-            target_journal: journal,
-            article_type: type,
-            independent_variables: ivs.length > 0 ? ivs : null,
-            dependent_variables: dvs.length > 0 ? dvs : null,
-            research_questions: rqs.length > 0 ? rqs : null,
-            objectives: objs.length > 0 ? objs : null,
-            hypotheses: hypos.length > 0 ? hypos : null,
-            preferred_methodology: methodology,
-            publication_year_preference: yearPref,
-            journal_quality_filter: qFilters
-        };
+    const tbs = getDynamicListValues('tb');
+    const sampleSize = document.getElementById('auto-sample-size') ? document.getElementById('auto-sample-size').value.trim() : null;
+    const samplingMethod = document.getElementById('auto-sampling-method') ? document.getElementById('auto-sampling-method').value.trim() : null;
+    const dataCollectionMethod = document.getElementById('auto-data-collection') ? document.getElementById('auto-data-collection').value.trim() : null;
+
+    const payload = {
+        session_id: sessionId || null,
+        title: title,
+        keywords: keywords.length > 0 ? keywords : null,
+        target_publisher: publisher,
+        target_journal: journal,
+        article_type: type,
+        independent_variables: ivs.length > 0 ? ivs : null,
+        dependent_variables: dvs.length > 0 ? dvs : null,
+        research_questions: rqs.length > 0 ? rqs : null,
+        objectives: objs.length > 0 ? objs : null,
+        hypotheses: hypos.length > 0 ? hypos : null,
+        theoretical_foundations: tbs.length > 0 ? tbs : null,
+        sample_size: sampleSize,
+        sampling_method: samplingMethod,
+        data_collection_method: dataCollectionMethod,
+        preferred_methodology: methodology,
+        publication_year_preference: yearPref,
+        journal_quality_filter: qFilters
+    };
 
 
         const response = await fetch('/api/v1/generate_paper', {
